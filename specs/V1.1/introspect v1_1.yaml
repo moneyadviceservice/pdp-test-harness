@@ -1,0 +1,151 @@
+---
+openapi: 3.0.0
+info:
+  title: introspect
+  description: An API that allows client to introspect RPT tokens.
+  version: "1.0"
+servers:
+- url: http://localhost:3000
+tags:
+- name: introspection-results
+  description: Get information on the validity and scope of authorisation offered in a token.
+paths:
+  /introspect:
+    post:
+      summary: Introspect a provided token
+      description: Create an introspection result base on provided RPT under the authority of the bearer PAT
+      operationId: post-introspection-results-request
+      parameters:
+      - name: X-Request-ID
+        in: header
+        description: A unique correlation id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+          example: 35cfcfb0-d98d-451f-83f1-e59933078555
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/introspect_body'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/introspection_result'
+              examples:
+                Example 1:
+                  value:
+                    active: true
+                    token_type: pension_dashboard_rpt
+                    exp: 1712926400
+                    iss: dashboardId1
+                    permissions:
+                    - resource_id: 4d5215ed-38bb-48ed-879a-fdb9ca58522f
+                      resource_scopes:
+                      - value
+                      - owner
+                      exp: 1712926400
+        "400":
+          description: Bad Request
+        "401":
+          description: "Unauthorized, returned if the provided PAT does not allow access to the account referenced by the RPT or the PAT is expired."
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+        "502":
+          description: Bad Gateway
+        "503":
+          description: Service Unavailable
+        "504":
+          description: Gateway Timeout
+      security:
+      - pat: []
+      servers:
+      - url: http://localhost:3000
+components:
+  schemas:
+    introspection_result:
+      title: introspection_result
+      required:
+      - active
+      type: object
+      properties:
+        active:
+          type: boolean
+          description: Indicator of whether or not the presented token is currently active
+        token_type:
+          type: string
+          description: The type of the token that has been introspected.
+          enum:
+          - pension_dashboard_rpt
+        exp:
+          minimum: 1
+          type: integer
+          description: The epoch seconds representation of the expiry date of the introspected token.
+        iss:
+          type: string
+          description: The iss for the registered participant that the passed token was generated for.
+        permissions:
+          type: array
+          description: |
+            The set of resource permissions defined by the provided token in conjuction with the provided autorisation.
+          items:
+            $ref: '#/components/schemas/introspection_result_permissions'
+    introspect_body:
+      required:
+      - token
+      type: object
+      properties:
+        token:
+          pattern: "^([a-zA-Z0-9_=]+)\\.([a-zA-Z0-9_=]+)\\.([a-zA-Z0-9_\\-\\+\\/=]*)"
+          type: string
+          description: The JWT token to be introspected
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dnZWRJbkFzIjoiYWRtaW4iLCJpYXQiOjE0MjI3Nzk2Mzh9.gzSraSYS8EXBxLN_oWnFSRgCzcmJmMjLiuyu5CSpyHI
+    introspection_result_permissions:
+      required:
+      - resource_id
+      - resource_scopes
+      type: object
+      properties:
+        resource_id:
+          type: string
+          description: The resource_id of a registered PeI
+          format: uuid
+        resource_scopes:
+          type: array
+          description: The role(s) which the requester has been granted in respect of the resource.
+          items:
+            type: string
+            enum:
+            - owner
+            - value
+        exp:
+          minimum: 1
+          type: integer
+          description: The epoch seconds representation of the expiry date of the permission.
+          format: date
+  parameters:
+    X-Request-ID:
+      name: X-Request-ID
+      in: header
+      description: A unique correlation id
+      required: true
+      style: simple
+      explode: false
+      schema:
+        type: string
+        format: uuid
+        example: 35cfcfb0-d98d-451f-83f1-e59933078555
+  securitySchemes:
+    pat:
+      type: http
+      scheme: bearer

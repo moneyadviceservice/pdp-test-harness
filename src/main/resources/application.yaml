@@ -1,0 +1,38 @@
+# server config
+server:
+  address: 0.0.0.0
+  port: ${PORT:8081}
+  compression:
+    enabled: true
+
+# swag config
+springdoc:
+  api-docs:
+    path: /api-docs
+  packagesToScan: "uk.org.ca.stub.simulator.rest.controller"
+  swagger-ui:
+    path: /swagger-ui-custom.html
+    operationsSorter: method
+
+cas:
+  signature: "SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+
+spring:
+  application:
+    name: "C&A Stub"
+  h2:
+    console:
+      enabled: true
+      path: /data
+      settings:
+        web-allow-others: true
+        trace: false
+  datasource:
+    url: ${DB:jdbc:h2:file:./db/cas}
+    username: ${DB_USER:sa}
+    password: ${DB_PASS:}
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    generate-ddl: true
+
+logging.level.root: OFF

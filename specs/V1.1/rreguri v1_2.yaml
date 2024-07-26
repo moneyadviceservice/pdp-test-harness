@@ -1,0 +1,356 @@
+openapi: 3.0.0
+info:
+  version: '1.2'
+  title: rreguri
+  description: An API hosted by the CDA through which Pension Data Providers can register and manage peis that are found as the result of a find-request.
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /rreguri:
+    post:
+      tags:
+        - manage-registered-peis
+      summary: Create a CDA registered resource.
+      description: |-
+        Register a new resource with the CDA.
+        Used to register PeIs when a Pension Data provider identifies a new match in response to at find request.
+      operationId: post-registered-peis
+      parameters:
+        - $ref: '#/components/parameters/X-Request-ID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: |-
+                    The URN for the resource in the form urn:pei:<holderGuid>:<assetGuid>
+
+                    Where <holderGuid> is the guid issued to the data provider during onboarding and <assetGuid> is the unique id by which the matched pension within the pension data provider's system.
+                  pattern: '^urn:pei:(?:\{{0,1}(?:[0-9a-fA-F]){8}-(?:[0-9a-fA-F]){4}-(?:[0-9a-fA-F]){4}-(?:[0-9a-fA-F]){4}-(?:[0-9a-fA-F]){12}\}{0,1}?:\{{0,1}(?:[0-9a-fA-F]){8}-(?:[0-9a-fA-F]){4}-(?:[0-9a-fA-F]){4}-(?:[0-9a-fA-F]){4}-(?:[0-9a-fA-F]){12}\}{0,1})$'
+                  example: 'urn:pei:a704ecce-06c0-46ad-a399-ab9eb43568df:a3f38ece-b586-45a6-890c-9b4c045747c8'
+                description:
+                  type: string
+                  description: |-
+                    The description of the pension that the PeI is being registered in relation to.
+                    This must match the scheme name that will be provided when the pension detail are retrieved.
+                  minLength: 1
+                  example: My Pension Scheme
+                match_status:
+                  type: string
+                  enum:
+                    - match-yes
+                    - match-possible
+                  description: The match status at the time of registration.
+                inbound_request_id:
+                  type: string
+                  description: 'If the registration resulted from a request from the CDA, the X-Request-ID of the cda request that resulted in the registration of the PeI.'
+                resource_scopes:
+                  type: array
+                  description: The scopes of access to the PeI being registered.
+                  items:
+                    type: string
+                    enum:
+                      - owner
+                      - value
+                      - delegate
+              required:
+                - name
+                - description
+                - match_status
+                - resource_scopes
+            examples:
+              Example 1:
+                value:
+                  name: urn:pei:a704ecce-06c0-46ad-a399-ab9eb43568df:a3f38ece-b586-45a6-890c-9b4c045747c8
+                  description: My Pension Scheme
+                  match_status: match-yes
+                  inbound_request_id: 92d17e90-ecf9-4f4b-ab79-8790f67635d2
+                  resource_scopes:
+                    - value
+                    - owner
+                    - delegate
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  resource_id:
+                    type: string
+                    description: The unique id of the newly created resource.
+                    format: uuid
+                    example: a9482564-5391-49e7-b43f-fdec1aed3005
+                required:
+                  - resource_id
+              examples:
+                Example 1:
+                  value:
+                    resource_id: a9482564-5391-49e7-b43f-fdec1aed3005
+          headers:
+            Location:
+              schema:
+                type: string
+                example: 'https://cdapath/registered-peis/a9482564-5391-49e7-b43f-fdec1aed3005'
+              description: The location of the registered resource
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+        '502':
+          description: Bad Gateway
+        '503':
+          description: Service Unavailable
+        '504':
+          description: Gateway Timeout
+      security:
+        - pat: []
+      servers:
+        - url: 'http://localhost:3000'
+  '/rreguri/{resource_id}':
+    patch:
+      tags:
+        - manage-registered-peis
+      summary: Update a CDA registered resource
+      description: |-
+        Update the match status of a registered pei.
+        If the match is determined to not be a match the registered-peis should be deleted.
+      operationId: patch-registered-peis-id
+      parameters:
+        - $ref: '#/components/parameters/X-Request-ID'
+        - name: resource_id
+          in: path
+          description: The unique registration id of the resource
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                match_status:
+                  type: string
+                  enum:
+                    - match-yes
+                  description: The new match status.
+                inbound_request_id:
+                  type: string
+                  description: 'If the updated resulted from a request from the CDA, the X-Request-ID of the cda request that resulted in the updated of the PeI.'
+                  example: 10a4b3c7-3061-4339-9981-04490d1d2f27
+              required:
+                - match_status
+            examples:
+              Example 1:
+                value:
+                  match_status: match-yes
+                  inbound_request_id: 10a4b3c7-3061-4339-9981-04490d1d2f27
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  resource_id:
+                    type: string
+                    description: The unique id of the registered PeI resource.
+                    minLength: 1
+                required:
+                  - resource_id
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '500':
+          description: Internal Server Error
+        '502':
+          description: Bad Gateway
+        '503':
+          description: Service Unavailable
+        '504':
+          description: Gateway Timeout
+      security:
+        - pat: []
+      servers:
+        - url: 'http://localhost:3000'
+    get:
+      tags:
+        - manage-registered-peis
+      summary: Retrieve a CDA registered resource
+      description: Retrieve the resource registered with the path resource_id.
+      operationId: get-registered-peis-resource_id
+      parameters:
+        - $ref: '#/components/parameters/X-Request-ID'
+        - name: resource_id
+          in: path
+          description: The unique registration id of the resource
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/registered_pei'
+              examples:
+                Example 1:
+                  value:
+                    resource_id: e6623b31-47ab-4c4c-9e88-23b3b4735c72
+                    resource_scopes:
+                      - value
+                      - owner
+                      - delegate
+                    name: urn:pei:a704ecce-06c0-46ad-a399-ab9eb43568df:a3f38ece-b586-45a6-890c-9b4c045747c8
+                    description: My Pension Scheme
+                    match_status: match-yes
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '500':
+          description: Internal Server Error
+        '502':
+          description: Bad Gateway
+        '503':
+          description: Service Unavailable
+        '504':
+          description: Gateway Timeout
+      security:
+        - pat: []
+      servers:
+        - url: 'http://localhost:3000'
+    delete:
+      tags:
+        - manage-registered-peis
+      summary: Delete a CDA registered resource
+      description: Delete the resource identified by the resource id.
+      operationId: delete-registered-peis-id
+      parameters:
+        - $ref: '#/components/parameters/X-Request-ID'
+        - name: deletion_reason
+          in: query
+          description: 'The reason that the PeI resource is being deleted.  `match-no` - a match-possible has previously been registered but found not to be a match.  `match-timeout` - a possible match has previously been registered but has since been removed eg if the pension owner did not confirm a match within the required time period.   `match-withdrawn` - an erroneous match was yes but has now been withdrawn.   `asset-removed` - a previously registered PeI has been removed eg benefit crystalised or transfered out '
+          required: true
+          schema:
+            type: string
+            enum:
+              - match-no
+              - match-timeout
+              - match-withdrawn
+              - asset-removed
+            example: match-no
+        - name: resource_id
+          in: path
+          description: The unique registration id of the resource
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Deletion successful
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '500':
+          description: Internal Server Error
+        '502':
+          description: Bad Gateway
+        '503':
+          description: Service Unavailable
+        '504':
+          description: Gateway Timeout
+      security:
+        - pat: []
+      servers:
+        - url: 'http://localhost:3000'
+tags:
+  - name: manage-registered-peis
+    description: Create and maintain registered PeI resources.
+components:
+  parameters:
+    X-Request-ID:
+      name: X-Request-ID
+      in: header
+      description: A unique correlation id
+      required: true
+      schema:
+        type: string
+        format: uuid
+        example: 35cfcfb0-d98d-451f-83f1-e59933078555
+  securitySchemes:
+    pat:
+      type: http
+      description: A PAT in the format of a JWT
+      scheme: bearer
+  schemas:
+    registered_pei:
+      type: object
+      title: registered_pei
+      description: The model representing a registered PeI Resource
+      properties:
+        resource_id:
+          type: string
+          description: The unique id of the registered resource.
+          example: e6623b31-47ab-4c4c-9e88-23b3b4735c72
+        name:
+          type: string
+          description: |-
+            The URN for the resource in the form urn:pei:<holderGuid>:<assetGuid>
+
+            Where <holderGuid> is the guid issued to the data provider during onboarding and <assetGuid> is the unique id by which the matched pension asset/citizen user match is known within the pension data provider's system.
+          pattern: '^urn:pei:(?:\{{0,1}(?:[0-9a-fA-F]){8}-(?:[0-9a-fA-F]){4}-(?:[0-9a-fA-F]){4}-(?:[0-9a-fA-F]){4}-(?:[0-9a-fA-F]){12}\}{0,1}?:\{{0,1}(?:[0-9a-fA-F]){8}-(?:[0-9a-fA-F]){4}-(?:[0-9a-fA-F]){4}-(?:[0-9a-fA-F]){4}-(?:[0-9a-fA-F]){12}\}{0,1})$'
+          example: urn:pei:a704ecce-06c0-46ad-a399-ab9eb43568df:a3f38ece-b586-45a6-890c-9b4c045747c8
+        description:
+          type: string
+          description: |-
+            The description of the pension that the PeI is being registered in relation to.
+            This must match the scheme name that will be provided when the pension detail are retrieved.
+          minLength: 1
+          example: My Pension Scheme
+        match_status:
+          type: string
+          enum:
+            - match-yes
+            - match-possible
+          description: The current match status of the registered PeI
+        resource_scopes:
+          type: array
+          description: The full list of scopes for which consent to access the resource can be given.
+          items:
+            type: string
+            enum:
+              - value
+              - owner
+              - delegate
+      required:
+        - resource_id
+        - name
+        - description
+        - match_status
+        - resource_scopes

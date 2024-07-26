@@ -1,0 +1,18 @@
+
+spring:
+  application:
+    name: "PDP C&A Stub"
+  h2:
+    console:
+      enabled: true
+      settings:
+        web-allow-others: true
+        trace: false
+      path: /data
+  datasource:
+    url: jdbc:h2:mem:test
+    username: sa
+    password: password
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    generate-ddl: true
