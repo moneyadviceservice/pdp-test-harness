@@ -1,0 +1,19 @@
+---
+servers:
+- url: "http://localhost:8080"
+openapi: "3.0.0"
+paths:
+  /token:
+    $ref: "./token v1_2.yaml#/paths/~1token"
+  /perm:
+    $ref: "./perm v1_1.yaml#/paths/~1perm"
+  /introspect:
+    $ref: "./introspect v1_1.yaml#/paths/~1introspect"
+  /rreguri/{resource_id}:
+    $ref: "./rreguri v1_2.yaml#/paths/~1rreguri~1{resource_id}"
+  /rreguri:
+    $ref: "./rreguri v1_2.yaml#/paths/~1rreguri"
+info:
+  title: "merged spec"
+  description: "merged spec"
+  version: "1.0.0"

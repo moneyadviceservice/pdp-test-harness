@@ -1,0 +1,102 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.3.1'
+	id 'io.spring.dependency-management' version '1.1.5'
+	id "org.openapi.generator" version "7.5.0"
+	id 'jacoco'
+}
+
+group = 'uk.org.ca.stub'
+version = '1.1.2'
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+}
+
+dependencies {
+	implementation( 'org.springframework.boot:spring-boot-starter-web') {
+		exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
+	}
+	implementation ('org.springframework.boot:spring-boot-starter-tomcat') {
+		exclude group: 'org.apache.tomcat.embed', module:'tomcat-embed-el'
+		exclude group: 'org.apache.tomcat.embed', module:'tomcat-embed-websocket'
+	}
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation ('org.springframework.boot:spring-boot-starter-validation') {
+		exclude group: 'org.apache.tomcat.embed', module:'tomcat-embed-el'
+	}
+
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+	implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
+
+	implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
+
+	runtimeOnly 'com.h2database:h2'
+	compileOnly 'org.projectlombok:lombok'
+
+	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+defaultTasks 'clean', 'build'
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	inputs.files(tasks.named('processResources'))
+	options.encoding = "UTF-8"
+}
+
+test {
+	useJUnitPlatform()
+	finalizedBy jacocoTestReport
+}
+
+// issue open due problem using JaCoCo using the Gradle task on ADO: https://github.com/microsoft/azure-pipelines-tasks/issues/16860
+jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.required = true
+		csv.required = true
+		html.required = true
+	}
+}
+
+// see https://github.com/OpenAPITools/openapi-generator/tree/master/modules/openapi-generator-gradle-plugin
+openApiGenerate {
+	generatorName.set("spring")
+	inputSpecRootDirectory.set("$rootDir/specs/V1.1")
+	outputDir.set("$rootDir/generated")
+	apiPackage.set("uk.org.ca.stub.simulator.rest.api")
+	invokerPackage.set("uk.org.ca.stub.simulator.invoker")
+	modelPackage.set("uk.org.ca.stub.simulator.rest.model")
+	generateApiTests.set(true)
+	generateModelTests.set(true)
+
+//	`configOptions` depends on the generator (`generatorName`) used. For spring: https://github.com/OpenAPITools/openapi-generator/blob/master/docs/generators/spring.md
+	configOptions.put("useSpringBoot3", "true")
+	configOptions.put("configPackage", "uk.org.ca.stub.simulator.configuration")
+	configOptions.put("interfaceOnly", "true")
+
+}
+
+jar {
+	// disable generation of **--plain.jar
+	enabled = false
+	archiveFileName = bootJar.archiveFileName
+}
+
+springBoot {
+	buildInfo()
+}
+compileJava.dependsOn(bootBuildInfo)

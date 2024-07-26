@@ -1,0 +1,33 @@
+{
+  "groups": [
+    {
+      "name": "application.forbid-headers.x-request-id.fullExclusions",
+      "type": "java.util.Set<uk.org.ca.stub.simulator.interceptor.CasAPIRequest>",
+      "description": "Descriptors for requests(path & method) excluded from requiring an `x-request-id` header. Used for exact matches."
+    },
+    {
+      "name": "application.forbid-headers.x-request-id.methodlessExclusions",
+      "type": "java.util.Set<uk.org.ca.stub.simulator.interceptor.CasAPIRequest>",
+      "description": "Descriptors for requests(path & any method, represented via '*') excluded from requiring an `x-request-id` header. Used for approximate matches, the request URL must start with 'path' and the request method is not checked."
+    },
+    {
+      "name": "application.forbid-headers.x-request-id.fileTypeExclusions",
+      "type": "java.util.Set<uk.org.ca.stub.simulator.interceptor.CasAPIRequest>",
+      "description": "Descriptors for requests(extension and 'GET') excluded from requiring an `x-request-id` header. Used for approximate matches too. The request URL must end in 'path' and the request method must be 'GET'."
+    }
+  ],
+  "properties": [
+    {
+      "name": "method",
+      "type": "java.lang.String",
+      "sourceType": "uk.org.ca.stub.simulator.interceptor.CasAPIRequest",
+      "description": "HTTP method, one of the typical ones or '*' meaning any of them."
+    },
+    {
+      "name": "path",
+      "type": "java.lang.String",
+      "sourceType": "uk.org.ca.stub.simulator.interceptor.CasAPIRequest",
+      "description": "An url part representing either a path or an extension for media files."
+    }
+  ]
+}

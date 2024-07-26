@@ -1,0 +1,161 @@
+openapi: 3.0.0
+info:
+  version: '1.2'
+  title: tokens
+  description: This API describes a service that will provide tokens that allow moderated access to the resources within the PDP Ecosystem.
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /token:
+    post:
+      tags:
+        - retrieve-uma-tokens
+      summary: Retrieve a UMA access token
+      description: Retrieve generated access tokens.
+      operationId: retrieve-uma-token
+      parameters:
+        - name: grant_type
+          in: query
+          description: The required grant type
+          required: true
+          schema:
+            type: string
+            enum:
+              - 'urn:ietf:params:oauth:grant-type:uma-ticket'
+              - 'urn:ietf:params:oauth:grant-type:jwt-bearer'
+            minLength: 1
+            example: 'urn:ietf:params:oauth:grant-type:jwt-bearer'
+        - name: ticket
+          in: query
+          description: The most recent permission ticket received by the client (dashboard) as part of this authorization process. Permission ticket is a structured JWT.
+          schema:
+            type: string
+            pattern: '^([a-zA-Z0-9_=]+)\.([a-zA-Z0-9_=]+)\.([a-zA-Z0-9_\-\+\/=]*)'
+            example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+        - name: claim_token
+          in: query
+          description: A JWT claim token
+          schema:
+            type: string
+            pattern: '^([a-zA-Z0-9_=]+)\.([a-zA-Z0-9_=]+)\.([a-zA-Z0-9_\-\+\/=]*)'
+            example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+        - name: claim_token_format
+          in: query
+          description: The type of the supplied claim token
+          schema:
+            type: string
+            enum:
+              - pension_dashboad_rqp
+            example: pension_dashboad_rqp
+        - name: assertion
+          in: query
+          description: 'A JWT token '
+          schema:
+            type: string
+            pattern: '^([a-zA-Z0-9_=]+)\.([a-zA-Z0-9_=]+)\.([a-zA-Z0-9_\-\+\/=]*)'
+            example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NjY4ODk3Ny0yNzNlLTQ0NzItOTI5ZS0xODExNTc0Mzc0MzMiLCJhdWQiOiJodHRwczovL2ludC5wZW5zaW9uc2Rhc2hib2FyZHMub3JnLnVrL2FtL29hdXRoMiIsIm5iZiI6MTcwNDM3MzI5OCwiaXNzIjoiaHR0cDovL3BlbnNpb25zZGFzaGJvYXJkLm9yZy9wZnNpc3N1ZXIiLCJuYW1lIjoiYTFlNWNlNDJhOTgxMGUyNTkxMzVmZTA2YWJmMDIzOGUxM2U5MzA0YSIsImV4cCI6MTcwNDM3MzM1OCwiaWF0IjoxNzA0MzczMjk4fQ.D2QmAWNDrcvDLGGbVJrriZx1bu0YIImATEhozrSCZ0o
+        - name: scope
+          in: query
+          description: The scope of the required access
+          schema:
+            type: string
+            enum:
+              - owner
+              - uma_protection
+            example: uma_protection
+        - $ref: '#/components/parameters/X-Request-ID'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    description: The generated access token
+                    pattern: '^([a-zA-Z0-9_=]+)\.([a-zA-Z0-9_=]+)\.([a-zA-Z0-9_\-\+\/=]*)'
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dnZWRJbkFzIjoiYWRtaW4iLCJpYXQiOjE0MjI3Nzk2Mzh9.gzSraSYS8EXBxLN_oWnFSRgCzcmJmMjLiuyu5CSpyHI
+                  token_type:
+                    type: string
+                    enum:
+                      - pension_dashboard_rpt
+                      - pension_dashboard_pei_url
+                      - pension_dashboard_pat
+                    description: The type of the generated acccess token
+                    example: pension_dashboard_rpt
+                  id_token:
+                    type: string
+                    description: The generated access token
+                    pattern: '^([a-zA-Z0-9_=]+)\.([a-zA-Z0-9_=]+)\.([a-zA-Z0-9_\-\+\/=]*)'
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdF9oYXNoIjoiS19GcVpMcnRyNDhkaU1lQmtHa0NEQSIsInN1YiI6ImNmNjY4ZDQ3LWVlNTgtNGUzMy1iYzA1LWZlYjcwNThkZTU4ZCIsImF1ZGl0VHJhY2tpbmdJZCI6ImI1NjI4NWFjLTBkNTAtNDk3NS1iNmZkLTc4Njc0YTUzYWEzNy04MTIiLCJzdWJuYW1lIjoiY2Y2NjhkNDctZWU1OC00ZTMzLWJjMDUtZmViNzA1OGRlNThkIiwiaXNzIjoiaHR0cHM6Ly9wZXJmLnBlbnNpb25zZGFzaGJvYXJkcy5vcmcudWsvYW0vb2F1dGgyIiwidG9rZW5OYW1lIjoiaWRfdG9rZW4iLCJwZWlzX2lkIjoiNmFhZDFhY2UyZmEwZjAwNGI0YzJiOGI1N2FlNGNmMzEyNjRiMzY0OSIsInNpZCI6IkpxQk1zYzdnd01WSkdRZlBGaURlMXd4RFptL1BaT3ZPei9FckpONGl3b2s9IiwiYXVkIjoiREItT0UwMDEiLCJjX2hhc2giOiJxaGp2d3FiMDJENkNZSmtHT1BOYXh3IiwiYWNyIjoiMCIsIm9yZy5mb3JnZXJvY2sub3BlbmlkY29ubmVjdC5vcHMiOiJvUEUyeG4zMzV0T1FpMjB1NS1UOVVGVmFFdEUiLCJhenAiOiJEQi1PRTAwMSIsImF1dGhfdGltZSI6MTcxNTY3ODkxMCwicmVhbG0iOiIvIiwiZXhwIjoxNzE1NjgyNTEyLCJ0b2tlblR5cGUiOiJKV1RUb2tlbiIsImlhdCI6MTcxNTY3ODkxMn0.JplsVv4KJk8uuCFLEBW2xbjC8ZispSCRJA_DozbD_HQ
+                  upgraded:
+                    type: boolean
+                    description: 'Defines if the token has been upgraded, currently not used'
+                  pct:
+                    type: string
+                    description: An additional PCT token
+                    pattern: '^([a-zA-Z0-9_=]+)\.([a-zA-Z0-9_=]+)\.([a-zA-Z0-9_\-\+\/=]*)'
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dnZWRJbkFzIjoiYWRtaW4iLCJpYXQiOjE0MjI3Nzk2Mzh9.gzSraSYS8EXBxLN_oWnFSRgCzcmJmMjLiuyu5CSpyHI
+                required:
+                  - access_token
+                  - token_type
+        '400':
+          $ref: '#/components/responses/badRequestResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+        '502':
+          description: Bad Gateway
+        '503':
+          description: Service Unavailable
+        '504':
+          description: Gateway Timeout
+      servers:
+        - url: 'http://localhost:3000'
+tags:
+  - name: retrieve-uma-tokens
+    description: Mechanisms to retrieve tokens used in uma processes
+components:
+  parameters:
+    X-Request-ID:
+      name: X-Request-ID
+      in: header
+      description: A unique correlation id
+      required: true
+      schema:
+        type: string
+        format: uuid
+        example: 35cfcfb0-d98d-451f-83f1-e59933078555
+  responses:
+    badRequestResponse:
+      description: Example response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                enum:
+                  - invalid_request
+                  - invalid_grant
+                  - invalid_scope
+                  - unauthorised_client
+                  - unsupported_grant_type
+                description: |
+                  Error codes as defined in https://datatracker.ietf.org/doc/html/rfc6749#section-5.2
+
+                  invalid_request – the request is missing a parameter so the server can’t proceed with the request, this may also be returned if the request includes an unsupported parameter or repeats a parameter 
+
+                  invalid_grant – the authorization code (or user’s password for the password grant type) is invalid or expired, this is also the error returned when the redirect URL given
+
+                  invalid_scope – for access token requests that include a scope (password or client_credentials grants), this error indicates an invalid scope value in the request 
+
+                  unauthorised_client – this client is not authorized to use the requested grant type
+
+                  unsupported_grant_type – the grant_type value is not recognised by the authorisation server

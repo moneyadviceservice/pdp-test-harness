@@ -1,0 +1,119 @@
+---
+openapi: 3.0.0
+info:
+  title: perm
+  description: An API used to retrieve permissions tokens.
+  version: "1.0"
+servers:
+- url: http://localhost:3000
+tags:
+- name: permission-requests
+  description: Obtain UMA permission tokens
+paths:
+  /perm:
+    post:
+      tags:
+      - permission-requests
+      summary: Retrieve a newly minted permission token
+      description: Create a new permission token for a registered resource.
+      operationId: post-perm
+      parameters:
+      - name: X-Request-ID
+        in: header
+        description: A unique correlation id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+          example: 35cfcfb0-d98d-451f-83f1-e59933078555
+      requestBody:
+        description: Details of the permission being sort
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/perm_body'
+            examples:
+              Example 1:
+                value:
+                  resource_id: 96478f28-73a2-424e-85b8-18453f830f61
+                  resource_scopes:
+                  - value
+                  - owner
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_201'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+        "502":
+          description: Bad Gateway
+        "503":
+          description: Service Unavailable
+        "504":
+          description: Gateway Timeout
+      security:
+      - pat: []
+      servers:
+      - url: http://localhost:3000
+components:
+  schemas:
+    perm_body:
+      required:
+      - resource_id
+      - resource_scopes
+      type: object
+      properties:
+        resource_id:
+          type: string
+          description: The id of the registered resource for to which access is required.
+          format: uuid
+          example: 96478f28-73a2-424e-85b8-18453f830f61
+        resource_scopes:
+          maxItems: 2
+          minItems: 2
+          type: array
+          description: The required access scopes. This must be "value" and "owner".
+          items:
+            type: string
+            enum:
+            - value
+            - owner
+    inline_response_201:
+      required:
+      - ticket
+      type: object
+      properties:
+        ticket:
+          pattern: "^([a-zA-Z0-9_=]+)\\.([a-zA-Z0-9_=]+)\\.([a-zA-Z0-9_\\-\\+\\/=]*)"
+          type: string
+          description: The permissions token for the requested resource_id for the requested scopes.
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NjY4ODk3Ny0yNzNlLTQ0NzItOTI5ZS0xODExNTc0Mzc0MzMiLCJhdWQiOiJodHRwczovL2ludC5wZW5zaW9uc2Rhc2hib2FyZHMub3JnLnVrL2FtL29hdXRoMiIsIm5iZiI6MTcwNDM3MzI5OCwiaXNzIjoiaHR0cDovL3BlbnNpb25zZGFzaGJvYXJkLm9yZy9wZnNpc3N1ZXIiLCJuYW1lIjoiYTFlNWNlNDJhOTgxMGUyNTkxMzVmZTA2YWJmMDIzOGUxM2U5MzA0YSIsImV4cCI6MTcwNDM3MzM1MCwiaWF0IjoxNzA0MzczMjk4fQ.U7JTocRa2rejt29Bg418CbZx2YJBrqvqhCe4jNo3FEQ
+  parameters:
+    X-Request-ID:
+      name: X-Request-ID
+      in: header
+      description: A unique correlation id
+      required: true
+      style: simple
+      explode: false
+      schema:
+        type: string
+        format: uuid
+        example: 35cfcfb0-d98d-451f-83f1-e59933078555
+  securitySchemes:
+    pat:
+      type: http
+      scheme: bearer
