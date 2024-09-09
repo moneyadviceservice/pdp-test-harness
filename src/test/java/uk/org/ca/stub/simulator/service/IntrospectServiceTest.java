@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import uk.org.ca.stub.simulator.rest.exception.InvalidRequestException;
 import uk.org.ca.stub.simulator.rest.exception.NotFoundException;
 import uk.org.ca.stub.simulator.rest.model.IntrospectionResult;
 import uk.org.ca.stub.simulator.rest.model.IntrospectionResultPermissions;
@@ -13,9 +14,8 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static uk.org.ca.stub.simulator.configuration.dbinitializer.ResourceDbInitializer.*;
-import static uk.org.ca.stub.simulator.configuration.dbinitializer.UserDbInitializer.TOKEN_WITH_INVALID_SIGNATURE;
 import static uk.org.ca.stub.simulator.service.AuthenticatedServiceTest.*;
+import static uk.org.ca.stub.simulator.utils.AssertionsConstants.*;
 
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
@@ -101,11 +101,11 @@ public class IntrospectServiceTest {
 
     @Test
     void testMalformedToken() {
-        assertThrows(IllegalArgumentException.class,() -> introspectService.introspectToken("malformed-token", VALID_AUTHORIZATION_HEADER));
+        assertThrows(InvalidRequestException.class,() -> introspectService.introspectToken("malformed-token", VALID_AUTHORIZATION_HEADER));
     }
 
     @Test
     void testInvalidSignatureToken() {
-        assertThrows(IllegalArgumentException.class,() -> introspectService.introspectToken(TOKEN_WITH_INVALID_SIGNATURE, VALID_AUTHORIZATION_HEADER));
+        assertThrows(InvalidRequestException.class,() -> introspectService.introspectToken(TOKEN_WITH_INVALID_SIGNATURE, VALID_AUTHORIZATION_HEADER));
     }
 }

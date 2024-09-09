@@ -46,14 +46,6 @@ public class AbstractAuthenticatedService {
         this.patStoredValidator = validatePatStoredFunction;
     }
 
-    // todo: validate bearer format?
-    static String getTokenFromHeader(String authorizationHeader) {
-        if (authorizationHeader == null || !authorizationHeader.toUpperCase().startsWith("BEARER ")) {
-            throw new InvalidRequestException("Bearer token required");
-        }
-        return authorizationHeader.substring("Bearer ".length());
-    }
-
     protected void validatePatAuthentication(String pat, RegisteredResource resource) {
         this.patAuthorizationValidator.accept(pat, resource);
     }

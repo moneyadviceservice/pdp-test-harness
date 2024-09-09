@@ -58,7 +58,7 @@ public class JwtService {
     private String signature;
 
     public String getEncodedToken(TokenInstance token, Map<String, Object> claims, UUID xRequestID) throws JsonProcessingException {
-        String jws = getSignedJwtToken(claims, xRequestID, token.lifespan, token.unit);
+        var jws = getSignedJwtToken(claims, xRequestID, token.lifespan, token.unit);
         return getTokenAsString(token, jws);
     }
 
@@ -119,10 +119,10 @@ public class JwtService {
     public List<IntrospectionResultPermissions> getPermissions(String accessToken, String resourceId) throws JsonProcessingException {
         var stringObjectMap = parseTokenToStringObjectMap(accessToken);
 
-        IntrospectionResultPermissions res = new IntrospectionResultPermissions();
+        var res = new IntrospectionResultPermissions();
 
         res.resourceId(UUID.fromString(resourceId));
-        Long exp = ((Number) stringObjectMap.get("exp")).longValue();
+        var exp = ((Number) stringObjectMap.get("exp")).longValue();
         res.exp(exp);
 
         List<IntrospectionResultPermissions> permissionsList = new ArrayList<>();
@@ -157,8 +157,7 @@ public class JwtService {
         var decoder = Base64.getUrlDecoder();
         var payload = new String(decoder.decode(chunks[1]));
         var x = new ObjectMapper();
-        stringObjectMap = x.readValue(payload, new TypeReference<Map<String, Object>>() {
-        });
+        stringObjectMap = x.readValue(payload, new TypeReference<>() {});
 
         return stringObjectMap;
     }

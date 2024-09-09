@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import uk.org.ca.stub.simulator.utils.MatchStatusEnum;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,41 +25,6 @@ public class RreguriBody {
   private String name;
 
   private String description;
-
-  /**
-   * The match status at the time of registration.
-   */
-  public enum MatchStatusEnum {
-    YES("match-yes"),
-
-    POSSIBLE("match-possible");
-
-    private String value;
-
-    MatchStatusEnum(String value) {
-      this.value = value;
-    }
-
-    @JsonValue
-    public String getValue() {
-      return value;
-    }
-
-    @Override
-    public String toString() {
-      return String.valueOf(value);
-    }
-
-    @JsonCreator
-    public static MatchStatusEnum fromValue(String value) {
-      for (MatchStatusEnum b : MatchStatusEnum.values()) {
-        if (b.value.equals(value)) {
-          return b;
-        }
-      }
-      throw new IllegalArgumentException("Unexpected value '" + value + "'");
-    }
-  }
 
   private MatchStatusEnum matchStatus;
 
@@ -92,7 +58,7 @@ public class RreguriBody {
 
     @JsonCreator
     public static ResourceScopesEnum fromValue(String value) {
-      for (ResourceScopesEnum b : ResourceScopesEnum.values()) {
+      for (var b : ResourceScopesEnum.values()) {
         if (b.value.equals(value)) {
           return b;
         }
@@ -235,7 +201,7 @@ public class RreguriBody {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    RreguriBody rreguriBody = (RreguriBody) o;
+    var rreguriBody = (RreguriBody) o;
     return Objects.equals(this.name, rreguriBody.name) &&
         Objects.equals(this.description, rreguriBody.description) &&
         Objects.equals(this.matchStatus, rreguriBody.matchStatus) &&
@@ -250,7 +216,7 @@ public class RreguriBody {
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder();
+    var sb = new StringBuilder();
     sb.append("class RreguriBody {\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("    description: ").append(toIndentedString(description)).append("\n");

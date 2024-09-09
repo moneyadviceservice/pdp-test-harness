@@ -22,7 +22,6 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static uk.org.ca.stub.simulator.service.AuthenticatedServiceTest.*;
-import static uk.org.ca.stub.simulator.utils.Commons.RESOURCE_ID_CLAIM_NAME;
 
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
@@ -87,11 +86,6 @@ class PermServiceTest {
                     permService.setPatAuthorizationValidator(ALWAYS_UNAUTHORIZED);
                     permService.setPatStoredValidator(ALWAYS_STORED);
                     assertThrows(UnauthorizedException.class, () -> permService.generatePMT(body, UUID.randomUUID(), VALID_AUTHORIZATION_HEADER), "Resource not found");
-                },
-                () -> { // the header doesn't look like a bearer
-                    permService.setPatAuthorizationValidator(ALWAYS_UNAUTHORIZED);
-                    permService.setPatStoredValidator(ALWAYS_STORED);
-                    assertThrows(InvalidRequestException.class, () -> permService.generatePMT(body, UUID.randomUUID(), INVALID_AUTHORIZATION_HEADER), "Resource not found");
                 }
         );
     }

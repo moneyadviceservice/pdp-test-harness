@@ -31,7 +31,7 @@ public class IntrospectionResultPermissions {
 
     VALUE("value");
 
-    private String value;
+    private final String value;
 
     ResourceScopesEnum(String value) {
       this.value = value;
@@ -152,7 +152,7 @@ public class IntrospectionResultPermissions {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    IntrospectionResultPermissions introspectionResultPermissions = (IntrospectionResultPermissions) o;
+    var introspectionResultPermissions = (IntrospectionResultPermissions) o;
     return Objects.equals(this.resourceId, introspectionResultPermissions.resourceId) &&
         Objects.equals(this.resourceScopes, introspectionResultPermissions.resourceScopes) &&
         Objects.equals(this.exp, introspectionResultPermissions.exp);
@@ -165,7 +165,7 @@ public class IntrospectionResultPermissions {
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder();
+    var sb = new StringBuilder();
     sb.append("class IntrospectionResultPermissions {\n");
     sb.append("    resourceId: ").append(toIndentedString(resourceId)).append("\n");
     sb.append("    resourceScopes: ").append(toIndentedString(resourceScopes)).append("\n");

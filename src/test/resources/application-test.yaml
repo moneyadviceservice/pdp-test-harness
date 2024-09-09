@@ -16,3 +16,46 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     generate-ddl: true
+
+  ssl:
+    bundle:
+      jks:
+        # Correct client configuration:
+        # 1. The trusted-client-keystore.p12 contains a cert trusted by the `server.ssl.trust-store`
+        # 2. The client trust store trust the server cert in `server.ssl.key-store`
+        trusted-test-client:
+          key:
+            alias: client-certificate
+          keystore:
+            location: classpath:trusted-client-keystore.p12
+            password: secret
+            type: PKCS12
+          truststore:
+            location: classpath:mTLS/server-truststore.p12
+            password: secret
+            type: PKCS12
+        # Correct client configuration but the client certificate is not trusted:
+        # 1. The untrusted-client-keystore.p12 contains a cert NOT trusted by the `server.ssl.trust-store`
+        # 2. The client trust store trust the server cert in `server.ssl.key-store`
+        untrusted-test-client:
+          key:
+            alias: untrusted-client-certificate
+          keystore:
+            location: classpath:untrusted-client-keystore.p12
+            password: secret
+            type: PKCS12
+          truststore:
+            location: classpath:mTLS/server-truststore.p12
+            password: secret
+            type: PKCS12
+
+server:
+  ssl:
+    key-store-type: PKCS12
+    key-store: classpath:mTLS/server-key-store.p12
+    key-store-password: secret
+    client-auth: need
+    trust-store: classpath:mTLS/server-truststore.p12
+    trust-store-password: secret
+  http:
+    port: 0 # this set the value as random port, avoiding collisions

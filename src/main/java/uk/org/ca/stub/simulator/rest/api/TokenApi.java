@@ -60,20 +60,30 @@ public interface TokenApi {
         produces = APPLICATION_JSON_UTF8_VALUE_MEDIA_TYPE
     )
     default ResponseEntity<?> retrieveUmaToken(
-        @NotNull @Size(min = 1) @Parameter(name = "grant_type", description = "The required grant type", required = true, in = ParameterIn.QUERY) @Valid
-        @RequestParam(value = "grant_type") String grantType,
-        @NotNull @Parameter(name = "X-Request-ID", description = "A unique correlation id", required = true, in = ParameterIn.HEADER)
-        @RequestHeader(value = "X-Request-ID") UUID xRequestID,
-        @Pattern(regexp = "^([a-zA-Z0-9_=]+)\\.([a-zA-Z0-9_=]+)\\.([a-zA-Z0-9_\\-\\+/=]*)") @Parameter(name = "ticket", description = "The most recent permission ticket received by the client (dashboard) as part of this authorization process. Permission ticket is a structured JWT.", in = ParameterIn.QUERY) @Valid
-        @RequestParam(value = "ticket", required = false) String ticket,
-        @Pattern(regexp = "^([a-zA-Z0-9_=]+)\\.([a-zA-Z0-9_=]+)\\.([a-zA-Z0-9_\\-\\+/=]*)") @Parameter(name = "claim_token", description = "A JWT claim token", in = ParameterIn.QUERY) @Valid
-        @RequestParam(value = "claim_token", required = false) String claimToken,
-        @Parameter(name = "claim_token_format", description = "The type of the supplied claim token", in = ParameterIn.QUERY) @Valid
-        @RequestParam(value = "claim_token_format", required = false) String claimTokenFormat,
-        @Pattern(regexp = "^([a-zA-Z0-9_=]+)\\.([a-zA-Z0-9_=]+)\\.([a-zA-Z0-9_\\-\\+/=]*)") @Parameter(name = "assertion", description = "A JWT token ", in = ParameterIn.QUERY) @Valid
-        @RequestParam(value = "assertion", required = false) String assertion,
-        @Parameter(name = "scope", description = "The scope of the required access", in = ParameterIn.QUERY) @Valid
-        @RequestParam(value = "scope", required = false) String scope
+            @Parameter(name = "grant_type", description = "The required grant type", required = true, in = ParameterIn.QUERY)
+            @NotNull @Size(min = 1)
+            @Valid @RequestParam(value = "grant_type") String grantType,
+
+            @Parameter(name = "X-Request-ID", description = "A unique correlation id", required = true, in = ParameterIn.HEADER)
+            @Valid @NotNull  @RequestHeader(value = "X-Request-ID") UUID xRequestID,
+
+            @Parameter(name = "ticket", description = "The most recent permission ticket received by the client (dashboard) as part of this authorization process. Permission ticket is a structured JWT.", in = ParameterIn.QUERY)
+            @Pattern(regexp = "^([a-zA-Z0-9_=]+)\\.([a-zA-Z0-9_=]+)\\.([a-zA-Z0-9_\\-\\+/=]*)")
+            @Valid @RequestParam(value = "ticket", required = false) String ticket,
+
+            @Parameter(name = "claim_token", description = "A JWT claim token", in = ParameterIn.QUERY)
+            @Pattern(regexp = "^([a-zA-Z0-9_=]+)\\.([a-zA-Z0-9_=]+)\\.([a-zA-Z0-9_\\-\\+/=]*)")
+            @Valid @RequestParam(value = "claim_token", required = false) String claimToken,
+
+            @Parameter(name = "claim_token_format", description = "The type of the supplied claim token", in = ParameterIn.QUERY)
+            @Valid @RequestParam(value = "claim_token_format", required = false) String claimTokenFormat,
+
+            @Parameter(name = "assertion", description = "A JWT token ", in = ParameterIn.QUERY)
+            @Pattern(regexp = "^([a-zA-Z0-9_=]+)\\.([a-zA-Z0-9_=]+)\\.([a-zA-Z0-9_\\-\\+/=]*)")
+            @Valid @RequestParam(value = "assertion", required = false) String assertion,
+
+            @Parameter(name = "scope", description = "The scope of the required access", in = ParameterIn.QUERY)
+            @Valid @RequestParam(value = "scope", required = false) String scope
     ) {
         return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
 

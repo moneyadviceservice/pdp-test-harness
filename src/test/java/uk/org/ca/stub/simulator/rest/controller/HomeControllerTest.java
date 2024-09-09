@@ -9,7 +9,7 @@ class HomeControllerTest extends AbstractControllerTest {
     @Test
     void home(){
         assertThat(this.restTemplate
-                .getForObject("http://localhost:" + port + "/", String.class)).
+                .getForObject("https://localhost:" + port + "/", String.class)).
                 contains("C&A Stub");
     }
 

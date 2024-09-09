@@ -13,6 +13,7 @@ import jakarta.validation.constraints.Size;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import uk.org.ca.stub.simulator.utils.MatchStatusEnum;
 
 /**
  * The model representing a registered PeI Resource
@@ -27,41 +28,6 @@ public class RegisteredPei {
   private String name;
 
   private String description;
-
-  /**
-   * The current match status of the registered PeI
-   */
-  public enum MatchStatusEnum {
-    YES("match-yes"),
-
-    POSSIBLE("match-possible");
-
-    private String value;
-
-    MatchStatusEnum(String value) {
-      this.value = value;
-    }
-
-    @JsonValue
-    public String getValue() {
-      return value;
-    }
-
-    @Override
-    public String toString() {
-      return String.valueOf(value);
-    }
-
-    @JsonCreator
-    public static MatchStatusEnum fromValue(String value) {
-      for (MatchStatusEnum b : MatchStatusEnum.values()) {
-        if (b.value.equals(value)) {
-          return b;
-        }
-      }
-      throw new IllegalArgumentException("Unexpected value '" + value + "'");
-    }
-  }
 
   private MatchStatusEnum matchStatus;
 
@@ -93,7 +59,7 @@ public class RegisteredPei {
 
     @JsonCreator
     public static ResourceScopesEnum fromValue(String value) {
-      for (ResourceScopesEnum b : ResourceScopesEnum.values()) {
+      for (var b : ResourceScopesEnum.values()) {
         if (b.value.equals(value)) {
           return b;
         }
@@ -251,7 +217,7 @@ public class RegisteredPei {
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder();
+    var sb = new StringBuilder();
     sb.append("class RegisteredPei {\n");
     sb.append("    resourceId: ").append(toIndentedString(resourceId)).append("\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");

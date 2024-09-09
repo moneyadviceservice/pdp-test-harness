@@ -20,11 +20,12 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.UUID;
 
+import uk.org.ca.stub.simulator.utils.MatchStatusEnum;
 import static uk.org.ca.stub.simulator.configuration.OpenApiConfig.PAT_SECURITY_SCHEMA;
 
 @RestController
 @RequestMapping("${openapi.mergedSpec.base-path:}")
-public class RreguriApiController implements RreguriApi {
+public class RreguriApiController extends AbstractApiController implements RreguriApi {
 
     private final RegisterService registerService;
 
@@ -35,13 +36,22 @@ public class RreguriApiController implements RreguriApi {
     @Override
     @Operation(security = @SecurityRequirement(name = PAT_SECURITY_SCHEMA))
     public ResponseEntity<Void> deleteRegisteredPeisId(UUID xRequestID, String deletionReason, String resourceId, HttpServletRequest request) {
-        return new ResponseEntity<>(registerService.deleteFind(resourceId, deletionReason, request.getHeader(HttpHeaders.AUTHORIZATION)), HttpStatus.NO_CONTENT);
+        String pat = getTokenFromHeader(request.getHeader(HttpHeaders.AUTHORIZATION));
+
+        ResponseEntity asssertedResponse = checkTokenForAssertionsForRreguriDelete(pat);
+        if (asssertedResponse != null) {
+            return asssertedResponse;
+        }
+
+        return new ResponseEntity<>(registerService.deleteFind(resourceId, deletionReason, pat), HttpStatus.NO_CONTENT);
     }
 
     @Override
     @Operation(security = @SecurityRequirement(name = PAT_SECURITY_SCHEMA))
     public ResponseEntity<RegisteredPei> getRegisteredPeisResourceId(UUID xRequestID, String resourceId, HttpServletRequest request) {
-        RegisteredResource registeredPeisResourceId = registerService.getRegisteredPeisResourceId(resourceId, request.getHeader(HttpHeaders.AUTHORIZATION));
+        String pat = getTokenFromHeader(request.getHeader(HttpHeaders.AUTHORIZATION));
+
+        var registeredPeisResourceId = registerService.getRegisteredPeisResourceId(resourceId, pat);
         return new ResponseEntity<>(transformToDto(registeredPeisResourceId), HttpStatus.OK);
     }
 
@@ -49,7 +59,7 @@ public class RreguriApiController implements RreguriApi {
         return new RegisteredPei(resource.getResourceId(),
                 resource.getName(),
                 resource.getDescription(),
-                RegisteredPei.MatchStatusEnum.fromValue(resource.getMatchStatus()),
+                MatchStatusEnum.fromValue(resource.getMatchStatus()),
                 resource.getResourceScopes().stream().map(s -> RegisteredPei.ResourceScopesEnum.fromValue(s.toString().toLowerCase())).toList()
         );
     }
@@ -57,15 +67,29 @@ public class RreguriApiController implements RreguriApi {
     @Override
     @Operation(security = @SecurityRequirement(name = PAT_SECURITY_SCHEMA))
     public ResponseEntity<PatchRegisteredPeisId200Response> patchRegisteredPeisId(UUID xRequestID, String resourceId, RreguriResourceIdBody rreguriResourceIdBody, HttpServletRequest request) {
-        var updatedFind = registerService.updateStatus(resourceId, rreguriResourceIdBody.getMatchStatus(), request.getHeader(HttpHeaders.AUTHORIZATION));
+        String pat = getTokenFromHeader(request.getHeader(HttpHeaders.AUTHORIZATION));
+
+        ResponseEntity asssertedResponse = checkTokenForAssertionsForRreguriPatch(pat);
+        if (asssertedResponse != null) {
+            return asssertedResponse;
+        }
+
+        var updatedFind = registerService.updateStatus(resourceId, rreguriResourceIdBody.getMatchStatus(), pat);
         return new ResponseEntity<>(new PatchRegisteredPeisId200Response(updatedFind.resourceId().toString()), HttpStatus.OK);
     }
 
     @Override
     @Operation(security = @SecurityRequirement(name = PAT_SECURITY_SCHEMA))
     public ResponseEntity<PostRegisteredPeis201Response> postRegisteredPeis(UUID xRequestID, RreguriBody rreguriBody, HttpServletRequest request) {
+        String pat = getTokenFromHeader(request.getHeader(HttpHeaders.AUTHORIZATION));
+
+        ResponseEntity asssertedResponse = checkTokenForAssertionsForRreguriPost(pat);
+        if (asssertedResponse != null) {
+            return asssertedResponse;
+        }
+
         try {
-            var upsertedFind = registerService.upsertFind(rreguriBody, xRequestID, request.getHeader(HttpHeaders.AUTHORIZATION));
+            var upsertedFind = registerService.upsertFind(rreguriBody, xRequestID, pat);
             var location = request.getRequestURL().toString() + "/" + upsertedFind.resourceId();
 
             if (Boolean.TRUE.equals(upsertedFind.alreadyRegistered())) {

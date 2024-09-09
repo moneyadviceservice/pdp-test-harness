@@ -1,8 +1,5 @@
 package uk.org.ca.stub.simulator.rest.model;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import jakarta.persistence.criteria.CriteriaBuilder;
-
 import java.util.Objects;
 
 /**
@@ -41,7 +38,7 @@ public class IntrospectBody {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        IntrospectBody introspectBody = (IntrospectBody) o;
+        var introspectBody = (IntrospectBody) o;
         return Objects.equals(this.token, introspectBody.token);
     }
 
@@ -52,7 +49,7 @@ public class IntrospectBody {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
         sb.append("class IntrospectBody {\n");
         sb.append("    token: ").append(toIndentedString(token)).append("\n");
         sb.append("}");

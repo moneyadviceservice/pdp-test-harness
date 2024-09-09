@@ -1,20 +1,14 @@
 package uk.org.ca.stub.simulator.rest.model;
 
-import java.net.URI;
-import java.util.Objects;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import org.openapitools.jackson.nullable.JsonNullable;
-import java.time.OffsetDateTime;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.*;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 
-
-import java.util.*;
-import jakarta.annotation.Generated;
+import java.util.Objects;
 
 /**
  * RetrieveUmaToken200Response
@@ -26,7 +20,7 @@ public class RetrieveUmaToken200Response {
   private String accessToken;
 
   /**
-   * The type of the generated acccess token
+   * The type of the generated access token
    */
   public enum TokenTypeEnum {
     RPT("pension_dashboard_rpt"),
