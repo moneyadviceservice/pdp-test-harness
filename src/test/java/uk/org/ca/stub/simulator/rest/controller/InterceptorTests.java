@@ -18,7 +18,7 @@ class InterceptorTests extends AbstractControllerTest {
 
     @Test
     void checkAllowedWithoutXHeader(){
-        var response = this.restTemplate.getForEntity("http://localhost:" + port + "/", String.class);
+        var response = this.restTemplate.getForEntity("https://localhost:" + port + "/", String.class);
         assertAll("request without 'x-request-id' is allowed to pass like it owns the place",
                 () -> assertEquals(HttpStatus.OK, response.getStatusCode()),
                 () -> assertTrue(Objects.requireNonNull(response.getBody()).contains("C&A Stub"))
@@ -29,7 +29,7 @@ class InterceptorTests extends AbstractControllerTest {
     void checkNotAllowedWithoutXHeader(){
         assertAll("request without 'x-request-id' is dropped like a hot potato",
                 () -> {
-                    var response_rrequri = this.restTemplate.getForEntity("http://localhost:" + port + "/rreguri/{resource_id}",
+                    var response_rrequri = this.restTemplate.getForEntity("https://localhost:" + port + "/rreguri/{resource_id}",
                             String.class, "non-existing");
                     assertAll("/rreguri request without 'x-request-id' is dropped like a hot potato",
                             () -> assertEquals(HttpStatus.BAD_REQUEST, response_rrequri.getStatusCode()),
@@ -40,7 +40,7 @@ class InterceptorTests extends AbstractControllerTest {
                     var body = new PermBody();
                     body.setResourceId(UUID.randomUUID());
                     body.resourceScopes(List.of(PermBody.ResourceScopesEnum.VALUE, PermBody.ResourceScopesEnum.OWNER));
-                    var response_perm = this.restTemplate.postForEntity("http://localhost:" + port + "/perm",body, String.class);
+                    var response_perm = this.restTemplate.postForEntity("https://localhost:" + port + "/perm",body, String.class);
                     assertAll("/perm request without 'x-request-id' is dropped like a hot potato",
                             () -> assertEquals(HttpStatus.BAD_REQUEST, response_perm.getStatusCode()),
                             () -> assertTrue(Objects.requireNonNull(response_perm.getBody()).contains("Missing 'x-request-id' header"))
@@ -58,7 +58,7 @@ class InterceptorTests extends AbstractControllerTest {
         assertAll("request with 'x-request-id' is allowed to pass like it owns the place",
                 () -> {
                     var request = new HttpEntity<>(headers);
-                    var response = this.restTemplate.exchange( "http://localhost:" + port + "/rreguri/{resource_id}",
+                    var response = this.restTemplate.exchange( "https://localhost:" + port + "/rreguri/{resource_id}",
                             HttpMethod.GET, request, String.class, "non-existing");
                     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
                 },
@@ -67,7 +67,7 @@ class InterceptorTests extends AbstractControllerTest {
                     body.setResourceId(UUID.randomUUID());
                     body.resourceScopes(List.of(PermBody.ResourceScopesEnum.VALUE, PermBody.ResourceScopesEnum.OWNER));
                     var request = new HttpEntity<>(body, headers);
-                    var response = this.restTemplate.exchange( "http://localhost:" + port + "/perm",
+                    var response = this.restTemplate.exchange( "https://localhost:" + port + "/perm",
                             HttpMethod.POST,
                             request,
                             String.class, "non-existing");

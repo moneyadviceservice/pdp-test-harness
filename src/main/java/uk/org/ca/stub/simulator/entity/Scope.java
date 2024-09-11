@@ -29,8 +29,7 @@ public enum Scope {
     public static final class ScopeDeserializer extends JsonDeserializer<Scope> {
         @Override
         public Scope deserialize(final JsonParser parser, final DeserializationContext context) throws IOException {
-            final String jsonValue = parser.getText().toUpperCase();
-            return Scope.valueOf(jsonValue);
+            return Scope.valueOf(parser.getText().toUpperCase());
         }
     }
 

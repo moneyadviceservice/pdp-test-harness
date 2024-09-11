@@ -1,24 +1,29 @@
 package uk.org.ca.stub.simulator.rest.controller;
 
-import com.fasterxml.jackson.databind.json.JsonMapper;
+import jdk.jfr.Description;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import uk.org.ca.stub.simulator.rest.model.IntrospectionResult;
+import uk.org.ca.stub.simulator.rest.model.IntrospectionResultPermissions;
+import uk.org.ca.stub.simulator.service.AuthenticatedServiceTest;
 import uk.org.ca.stub.simulator.service.IntrospectService;
 import uk.org.ca.stub.simulator.service.JwtService;
 
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static uk.org.ca.stub.simulator.configuration.dbinitializer.ResourceDbInitializer.*;
-import static uk.org.ca.stub.simulator.configuration.dbinitializer.UserDbInitializer.TOKEN_WITH_INVALID_SIGNATURE;
 import static uk.org.ca.stub.simulator.service.AuthenticatedServiceTest.*;
+import static uk.org.ca.stub.simulator.utils.AssertionsConstants.*;
 import static uk.org.ca.stub.simulator.utils.Commons.TOKEN;
 import static uk.org.ca.stub.simulator.utils.Commons.X_REQUEST_ID;
 
@@ -31,170 +36,157 @@ public class IntrospectApiControllerTest extends AbstractControllerTest {
     @Autowired
     IntrospectService introspectService;
 
-    private static MultiValueMap<String, String> buildFormForToken(String token) {
-        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
-        formData.add(TOKEN, token);
-        return formData;
-    }
-
-    private static HttpHeaders getHttpHeadersWithAuthentication() {
-        var headers = new HttpHeaders();
-        headers.set(X_REQUEST_ID, String.valueOf(UUID.randomUUID()));
-        headers.setContentType(APPLICATION_FORM_URLENCODED);
-        headers.set(HttpHeaders.AUTHORIZATION, VALID_AUTHORIZATION_HEADER);
-        return headers;
-    }
+    private String endpoint;
 
     @BeforeEach
     void setUp() {
+        endpoint = "https://localhost:" + port + "/introspect";
         // warranty all test use the happy path scenario by default
         introspectService.setPatStoredValidator(ALWAYS_STORED);
         introspectService.setPatAuthorizationValidator(ALWAYS_AUTHORIZED);
     }
 
     @Test
-    void allTests() {
+    void testsEndpoint() {
         assertNotNull(restTemplate);
-        assertEquals(HttpStatus.METHOD_NOT_ALLOWED, restTemplate.getForEntity("http://localhost:" + port + "/introspect", String.class).getStatusCode());
+        assertEquals(HttpStatus.METHOD_NOT_ALLOWED, restTemplate.getForEntity(endpoint, String.class).getStatusCode());
     }
 
     @Test
-    void postRequest() throws Exception {
-        var headers = getHttpHeadersWithAuthentication();
-
-        MultiValueMap<String, String> formData = buildFormForToken(VALID_RPT_TOKEN);
-
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(formData, headers);
-
-        var response = this.restTemplate.exchange( "http://localhost:" + port + "/introspect",
-                HttpMethod.POST,
-                request, String.class);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-
-        var mapper = new JsonMapper();
-        var responseContent = mapper.readValue(response.getBody(), Map.class);
-        var active = responseContent.get("active").toString();
-        var tokenType = responseContent.get("token_type").toString();
-        var exp = responseContent.get("exp");
-        var issuer = responseContent.get("iss").toString();
-        var permissions = responseContent.get("permissions").toString();
+    @Description("Positive test scenarios")
+    void shouldReturn200() {
         assertAll(
-                () -> assertEquals("true",active),
-                () -> assertEquals("pension_dashboard_rpt",tokenType),
-                () -> assertEquals(Long.valueOf("1813411040"),((Integer) exp).longValue()),
-                () -> assertEquals("https://stub-cas.co.uk",issuer),
-                () -> assertEquals("[{resource_id=92476c2f-25b8-4d87-afde-18a9ee2631dc, resource_scopes=[owner], exp=1813411040}]",permissions)
-        );
-    }
+                () -> {
+                    var response = restTemplate.postForEntity(endpoint, createPostIntrospectRequestWithRpt(VALID_AUTHORIZATION_HEADER,VALID_RPT_TOKEN), IntrospectionResult.class);
 
-    /**
-     * In the following test with an expired token, we return 200 response with active flag = false
-     */
-    @Test ()
-    void postRequestExpiredToken() throws Exception{
-        var headers = getHttpHeadersWithAuthentication();
+                    assertEquals(HttpStatus.OK, response.getStatusCode());
 
-        MultiValueMap<String, String> formData = buildFormForToken(EXPIRED_RPT_TOKEN);
+                    List<IntrospectionResultPermissions> permissions = new ArrayList<>();
+                    IntrospectionResultPermissions permission = new IntrospectionResultPermissions();
+                    permission.resourceId(UUID.fromString("92476c2f-25b8-4d87-afde-18a9ee2631dc")).addResourceScopesItem(IntrospectionResultPermissions.ResourceScopesEnum.OWNER).exp(Long.valueOf("1813411040"));
+                    permissions.add(permission);
 
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(formData, headers);
+                    IntrospectionResult targetResult = new IntrospectionResult()
+                            .active(true)
+                            .tokenType(IntrospectionResult.TokenTypeEnum.PENSION_DASHBOARD_RPT)
+                            .exp(Long.valueOf("1813411040"))
+                            .iss("https://stub-cas.co.uk")
+                            .permissions(permissions);
 
-        var response = this.restTemplate.exchange( "http://localhost:" + port + "/introspect",
-                HttpMethod.POST,
-                request, String.class);
+                    assertIntrospectionResult(response, targetResult);
+                },
+                () -> {
+                    var response = restTemplate.postForEntity(endpoint, createPostIntrospectRequestWithRpt(VALID_AUTHORIZATION_HEADER,EXPIRED_RPT_TOKEN), IntrospectionResult.class);
 
+                    assertEquals(HttpStatus.OK, response.getStatusCode());
 
-        var mapper = new JsonMapper();
-        var responseContent = mapper.readValue(response.getBody(), Map.class);
-        var active = responseContent.get("active").toString();
-        var tokenType = responseContent.get("token_type").toString();
-        var exp = responseContent.get("exp");
-        var issuer = responseContent.get("iss").toString();
-        var permissions = responseContent.get("permissions").toString();
-        assertAll(
-                () -> assertEquals("false",active),
-                () -> assertEquals("pension_dashboard_rpt",tokenType),
-                () -> assertEquals(Long.valueOf("1624197800"),((Integer) exp).longValue()),
-                () -> assertEquals("https://stub-cas.co.uk",issuer),
-                () -> assertEquals("[{resource_id=62933ca9-447e-4ce0-bb39-124e9fa3214f, resource_scopes=[owner], exp=1624197800}]",permissions)
+                    List<IntrospectionResultPermissions> permissions = new ArrayList<>();
+                    IntrospectionResultPermissions permission = new IntrospectionResultPermissions();
+                    permission.resourceId(UUID.fromString("62933ca9-447e-4ce0-bb39-124e9fa3214f")).addResourceScopesItem(IntrospectionResultPermissions.ResourceScopesEnum.OWNER).exp(Long.valueOf("1624197800"));
+                    permissions.add(permission);
+
+                    IntrospectionResult targetResult = new IntrospectionResult()
+                            .active(false)
+                            .tokenType(IntrospectionResult.TokenTypeEnum.PENSION_DASHBOARD_RPT)
+                            .exp(Long.valueOf("1624197800"))
+                            .iss("https://stub-cas.co.uk")
+                            .permissions(permissions);
+
+                    assertIntrospectionResult(response, targetResult);
+                }
         );
     }
 
     @Test
-    void postRequestUnusedToken(){
-        var headers = getHttpHeadersWithAuthentication();
+    @Description("All possible bad requests (400)")
+    void shouldReturn400(){
+        assertAll(
+                () -> {
+                    var response = restTemplate.postForEntity(endpoint, createPostIntrospectRequestWithRpt(VALID_AUTHORIZATION_HEADER,"malformed-token"), String.class);
 
-        MultiValueMap<String, String> formData = buildFormForToken(UNUSED_RPT_TOKEN);
+                    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+                },
+                () -> {
+                    var response = restTemplate.postForEntity(endpoint, createPostIntrospectRequestWithRpt(VALID_AUTHORIZATION_HEADER,ASSERTION_RPT_INTROSPECT_400_INCORRECT_SIGNATURE), String.class);
 
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(formData, headers);
+                    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+                },
+                () -> {
+                    introspectService.setPatStoredValidator(ALWAYS_NOT_STORED);
+                    introspectService.setPatAuthorizationValidator(ALWAYS_AUTHORIZED);
+                    var response = restTemplate.postForEntity(endpoint, createPostIntrospectRequestWithRpt(VALID_AUTHORIZATION_HEADER,VALID_RPT_TOKEN), String.class);
 
-        var response = this.restTemplate.exchange( "http://localhost:" + port + "/introspect",
-                HttpMethod.POST,
-                request, String.class);
-
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals("Resource not found", response.getBody());
+                    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+                }
+        );
     }
 
     @Test
-    void postRequestMalformedToken(){
-        var headers = getHttpHeadersWithAuthentication();
-
-        MultiValueMap<String, String> formData = buildFormForToken("malformed-token");
-
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(formData, headers);
-
-        var response = this.restTemplate.exchange( "http://localhost:" + port + "/introspect",
-                HttpMethod.POST,
-                request, String.class);
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    @Description("401,404")
+    void shouldReturn40X() {
+        assertAll(
+                () -> {
+                    var response = restTemplate.postForEntity(endpoint, createPostIntrospectRequestWithRpt(VALID_AUTHORIZATION_HEADER, ASSERTION_RPT_INTROSPECT_401_EXPIRED_PAT), String.class);
+                    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+                },
+                () -> {
+                    var response = restTemplate.postForEntity(endpoint, createPostIntrospectRequestWithRpt(VALID_AUTHORIZATION_HEADER,ASSERTION_RPT_INTROSPECT_404_RESOURCE_NOT_FOUND), String.class);
+                    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+                }
+        );
     }
 
     @Test
-    void postRequestInvalidSignatureToken(){
-        var headers = getHttpHeadersWithAuthentication();
-
-        MultiValueMap<String, String> formData = buildFormForToken(TOKEN_WITH_INVALID_SIGNATURE);
-
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(formData, headers);
-
-        var response = this.restTemplate.exchange( "http://localhost:" + port + "/introspect",
-                HttpMethod.POST,
-                request, String.class);
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    @Description("500,502,503,504")
+    void shouldReturn50X() {
+        assertAll(
+                () -> {
+                    var response = restTemplate.postForEntity(endpoint, createPostIntrospectRequestWithRpt(VALID_AUTHORIZATION_HEADER,ASSERTION_RPT_INTROSPECT_500_SERVER_ERROR), IntrospectionResult.class);
+                    assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+                },
+                () -> {
+                    var response = restTemplate.postForEntity(endpoint, createPostIntrospectRequestWithRpt(VALID_AUTHORIZATION_HEADER,ASSERTION_RPT_INTROSPECT_502_BAD_GATEWAY), IntrospectionResult.class);
+                    assertEquals(HttpStatus.BAD_GATEWAY, response.getStatusCode());
+                },
+                () -> {
+                    var response = restTemplate.postForEntity(endpoint, createPostIntrospectRequestWithRpt(VALID_AUTHORIZATION_HEADER,ASSERTION_RPT_INTROSPECT_503_SERVICE_UNAVAILABLE), IntrospectionResult.class);
+                    assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());
+                },
+                () -> {
+                    var response = restTemplate.postForEntity(endpoint, createPostIntrospectRequestWithRpt(VALID_AUTHORIZATION_HEADER,ASSERTION_RPT_INTROSPECT_504_GATEWAY_TIMEOUT), IntrospectionResult.class);
+                    assertEquals(HttpStatus.GATEWAY_TIMEOUT, response.getStatusCode());
+                }
+        );
     }
 
-    @Test
-    void patNotStored() {
-        introspectService.setPatStoredValidator(ALWAYS_NOT_STORED);
-        introspectService.setPatAuthorizationValidator(ALWAYS_AUTHORIZED);
-        var response = this.restClient.post()
-                .uri("http://localhost:" + port + "/introspect")
-                .contentType(APPLICATION_FORM_URLENCODED)
-                .body(buildFormForToken(VALID_RPT_TOKEN))
-                .headers(h -> h.addAll(getHttpHeadersWithAuthentication()))
-                .accept(APPLICATION_JSON)
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, IGNORE_ERROR)
-                .toEntity(String.class);
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    private static MultiValueMap<String, String> buildFormForToken(String token) {
+        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+        formData.add(TOKEN, token);
+        return formData;
     }
 
-    @Test
-    void resourceNotAuthorizedForPat() {
-        introspectService.setPatStoredValidator(ALWAYS_STORED);
-        introspectService.setPatAuthorizationValidator(ALWAYS_UNAUTHORIZED);
-        var response = this.restClient.post()
-                .uri("http://localhost:" + port + "/introspect")
-                .contentType(APPLICATION_FORM_URLENCODED)
-                .body(buildFormForToken(VALID_RPT_TOKEN))
-                .headers(h -> h.addAll(getHttpHeadersWithAuthentication()))
-                .accept(APPLICATION_JSON)
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, IGNORE_ERROR)
-                .toEntity(String.class);
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+    private static HttpHeaders getHttpHeadersWithAuthentication(String authHeader) {
+        var headers = new HttpHeaders();
+        headers.set(X_REQUEST_ID, String.valueOf(UUID.randomUUID()));
+        headers.setContentType(APPLICATION_FORM_URLENCODED);
+        headers.set(HttpHeaders.AUTHORIZATION, authHeader);
+        return headers;
     }
+
+    private static HttpEntity<MultiValueMap<String, String>> createPostIntrospectRequestWithRpt(String authHeader, String rptToken) {
+        var headers = getHttpHeadersWithAuthentication(authHeader);
+        MultiValueMap<String, String> formData = buildFormForToken(rptToken);
+        return new HttpEntity<>(formData, headers);
+    }
+
+    private static void assertIntrospectionResult(ResponseEntity<IntrospectionResult> response, IntrospectionResult targetResult) {
+        assertAll(
+                () -> assertEquals(targetResult.getActive(),response.getBody().getActive()),
+                () -> assertEquals(targetResult.getTokenType(),response.getBody().getTokenType()),
+                () -> assertEquals(targetResult.getExp(),response.getBody().getExp()),
+                () -> assertEquals(targetResult.getIss(),response.getBody().getIss()),
+                () -> assertEquals(targetResult.getPermissions(),response.getBody().getPermissions())
+        );
+    }
+
 }

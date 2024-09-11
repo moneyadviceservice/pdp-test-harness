@@ -10,7 +10,8 @@ import uk.org.ca.stub.simulator.rest.exception.InvalidRequestException;
 import uk.org.ca.stub.simulator.rest.exception.UnauthorizedException;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static uk.org.ca.stub.simulator.configuration.dbinitializer.UserDbInitializer.NOT_EXPIRED_TOKEN_PAT;
+import static uk.org.ca.stub.simulator.utils.AssertionsConstants.NOT_EXPIRED_TOKEN_PAT;
+
 
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
@@ -43,17 +44,6 @@ class AbstractAuthenticatedServiceTest {
                 () -> assertThrows(IllegalStateException.class, () -> cut.validatePatStored(NOT_EXPIRED_TOKEN_PAT, null)),
                 () -> assertThrows(InvalidRequestException.class, () -> cut.validatePatStored(NOT_EXISTING_PAT, userRepository)),
                 () -> assertDoesNotThrow(() -> cut.validatePatStored(NOT_EXPIRED_TOKEN_PAT, userRepository))
-        );
-    }
-
-    @Test
-    void testGgetTokenFromHeader() {
-        assertAll("Bearer head scenarios",
-                () -> assertThrows(InvalidRequestException.class, () -> AbstractAuthenticatedService.getTokenFromHeader(null)),
-                () -> assertThrows(InvalidRequestException.class, () -> AbstractAuthenticatedService.getTokenFromHeader("not-valid")),
-                () -> assertThrows(InvalidRequestException.class, () -> AbstractAuthenticatedService.getTokenFromHeader("bearer-not-valid")),
-                () -> assertDoesNotThrow( () -> AbstractAuthenticatedService.getTokenFromHeader("bearer this-is-valid")),
-                () -> assertEquals("1234567890",   AbstractAuthenticatedService.getTokenFromHeader("bearer 1234567890"))
         );
     }
 }

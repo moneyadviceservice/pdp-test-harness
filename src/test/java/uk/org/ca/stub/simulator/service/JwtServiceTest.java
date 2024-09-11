@@ -13,12 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static uk.org.ca.stub.simulator.configuration.dbinitializer.ResourceDbInitializer.EXPIRED_RPT_ACCESS_TOKEN;
-import static uk.org.ca.stub.simulator.configuration.dbinitializer.ResourceDbInitializer.VALID_RPT_ACCESS_TOKEN;
-import static uk.org.ca.stub.simulator.configuration.dbinitializer.UserDbInitializer.EXPIRED_TOKEN_PAT;
-import static uk.org.ca.stub.simulator.configuration.dbinitializer.UserDbInitializer.NOT_EXPIRED_TOKEN_PAT;
-import static uk.org.ca.stub.simulator.configuration.dbinitializer.UserDbInitializer.TOKEN_WITH_INVALID_SIGNATURE;
-import static uk.org.ca.stub.simulator.configuration.dbinitializer.UserDbInitializer.TOKEN_WITH_ISSUER_AND_PERMISSIONS;
+import static uk.org.ca.stub.simulator.utils.AssertionsConstants.*;
 
 
 @ActiveProfiles("test")

@@ -47,7 +47,7 @@ public class IntrospectionResult {
 
     @JsonCreator
     public static TokenTypeEnum fromValue(String value) {
-      for (TokenTypeEnum b : TokenTypeEnum.values()) {
+      for (var b : TokenTypeEnum.values()) {
         if (b.value.equals(value)) {
           return b;
         }
@@ -208,7 +208,7 @@ public class IntrospectionResult {
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder();
+    var sb = new StringBuilder();
     sb.append("class IntrospectionResult {\n");
     sb.append("    active: ").append(toIndentedString(active)).append("\n");
     sb.append("    tokenType: ").append(toIndentedString(tokenType)).append("\n");

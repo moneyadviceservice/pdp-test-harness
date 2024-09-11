@@ -10,7 +10,7 @@ import uk.org.ca.stub.simulator.rest.model.JwkSetsResponse;
 
 @RestController
 @RequestMapping("${openapi.mergedSpec.base-path:}")
-public class JwksApiController implements JwksApi {
+public class JwksApiController extends AbstractApiController implements JwksApi {
 
     @Override
     public ResponseEntity<JwkSetsResponse> getJwks(HttpServletRequest request) {

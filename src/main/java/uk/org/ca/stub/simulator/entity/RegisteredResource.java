@@ -57,7 +57,7 @@ public class RegisteredResource {
     private LocalDateTime updatedAt;
 
     public String toString() {
-        return "User" +
+        return "RegisteredResource" +
                 (friendlyName ==null || friendlyName.isBlank() ? "" : "(" + friendlyName + ")") +
                 "{" +
                 "resourceId='" + resourceId + '\'' +

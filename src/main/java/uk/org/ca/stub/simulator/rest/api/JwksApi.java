@@ -26,7 +26,7 @@ public interface JwksApi {
     @ApiResponses(
             value = {
             @ApiResponse(responseCode = "200", description = "Created", content = {
-                @Content(mediaType = "application/json")            }),
+                @Content(mediaType = "application/json")}),
             @ApiResponse(responseCode = "400", description = "Bad Request"),
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "403", description = "Forbidden"),
@@ -43,7 +43,6 @@ public interface JwksApi {
         path = "/jwk_uri",
         produces = APPLICATION_JSON_UTF8_VALUE_MEDIA_TYPE
     )
-
     default ResponseEntity<JwkSetsResponse> getJwks(HttpServletRequest request) {
         return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
     }

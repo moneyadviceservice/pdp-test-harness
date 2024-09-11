@@ -1,20 +1,13 @@
 package uk.org.ca.stub.simulator.rest.model;
 
-import java.net.URI;
-import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import java.util.UUID;
-import org.openapitools.jackson.nullable.JsonNullable;
-import java.time.OffsetDateTime;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.*;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
-
-import java.util.*;
-import jakarta.annotation.Generated;
+import java.util.Objects;
+import java.util.UUID;
 
 /**
  * PostRegisteredPeis201Response
@@ -64,7 +57,7 @@ public class PostRegisteredPeis201Response {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    PostRegisteredPeis201Response postRegisteredPeis201Response = (PostRegisteredPeis201Response) o;
+    var postRegisteredPeis201Response = (PostRegisteredPeis201Response) o;
     return Objects.equals(this.resourceId, postRegisteredPeis201Response.resourceId);
   }
 
@@ -75,7 +68,7 @@ public class PostRegisteredPeis201Response {
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder();
+    var sb = new StringBuilder();
     sb.append("class PostRegisteredPeis201Response {\n");
     sb.append("    resourceId: ").append(toIndentedString(resourceId)).append("\n");
     sb.append("}");

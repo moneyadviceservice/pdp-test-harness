@@ -1,12 +1,13 @@
 package uk.org.ca.stub.simulator.filter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.info.BuildProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
@@ -32,9 +33,14 @@ public class HttpLoggerFilter extends OncePerRequestFilter {
     private static final Logger LOGGER = LoggerFactory.getLogger(HTTP_LOGGER);
 
     private final BuildProperties buildProperties;
+    private final String clientAuthConfig;
+    private final JsonMapper jsonMapper = new JsonMapper();
 
-    public HttpLoggerFilter(BuildProperties buildProperties) {
+
+    public HttpLoggerFilter(BuildProperties buildProperties,
+                            @Value("${server.ssl.client-auth}") String clientAuthConfig) {
         this.buildProperties = buildProperties;
+        this.clientAuthConfig = clientAuthConfig;
     }
 
     @Override
@@ -47,25 +53,25 @@ public class HttpLoggerFilter extends OncePerRequestFilter {
         filterChain.doFilter(cachedRequest, cachedResponse);
 
         if (requestId == null || ObjectUtils.isEmpty(requestId)) {
-            String uri = request.getRequestURI();
-            List<String> endpoints = List.of("/token", "/rreguri", "/introspect", "/perm");
+            var uri = request.getRequestURI();
+            var endpoints = List.of("/token", "/rreguri", "/introspect", "/perm","/jwk_uri");
             if (endpoints.stream().anyMatch(uri::contains)) {
                 LOGGER.debug("Not logging request and response due to x-request-id being null or empty for: {} ", request.getRequestURI());
             }
         } else if (LOGGER.isInfoEnabled()) {
             // build and log
-            HttpTrafficLogDto httpLogDto = getRequestResponseInstance(requestId, cachedRequest, cachedResponse);
+            var httpLogDto = getRequestResponseInstance(request, cachedRequest, cachedResponse);
             httpLogDto.setBuildVersion(buildProperties.getVersion());
             LOGGER.info(httpLogDto.toString());
         }
         cachedResponse.copyBodyToResponse();
     }
 
-    private HttpTrafficLogDto getRequestResponseInstance(String requestId, ContentCachingRequestWrapper cachedRequest, ContentCachingResponseWrapper cachedResponse) throws IOException {
+    private HttpTrafficLogDto getRequestResponseInstance(HttpServletRequest request, ContentCachingRequestWrapper cachedRequest, ContentCachingResponseWrapper cachedResponse) throws IOException {
         var httpLogDto = HttpTrafficLogDto.builder();
-
+        httpLogDto.mtlsInfo(new MtlsInfoDto(request, clientAuthConfig));
         // add request params
-        httpLogDto.requestId(requestId)
+        httpLogDto.requestId(request.getHeader(X_REQUEST_ID))
                 .requestUri(cachedRequest.getRequestURI())
                 .requestMethod(cachedRequest.getMethod())
                 .pathInfo(cachedRequest.getPathInfo());
@@ -90,12 +96,11 @@ public class HttpLoggerFilter extends OncePerRequestFilter {
         }
 
         // request body
-        String requestContent = cachedRequest.getContentAsString();
+        var requestContent = cachedRequest.getContentAsString();
         // note - below we check if requestParams for form data - won't parse as json and we get an unnecessary exception (e.g. introspect endpoint)
         if (requestParams.isEmpty() && !requestContent.isEmpty()) {
             try {
-                ObjectMapper objectMapper = new ObjectMapper();
-                Map<String, Object> myRequestBody = objectMapper.readValue(requestContent, Map.class);
+                Map<String, Object> myRequestBody = jsonMapper.readValue(requestContent, Map.class);
                 httpLogDto.requestBodyParameters(myRequestBody);
             } catch (IOException e) {
                 LOGGER.error("Error parsing request body", e);
@@ -103,7 +108,7 @@ public class HttpLoggerFilter extends OncePerRequestFilter {
         }
 
         // response content
-        String contentType = cachedResponse.getContentType();
+        var contentType = cachedResponse.getContentType();
         byte[] content = cachedResponse.getContentAsByteArray();
 
         httpLogDto.responseStatus(cachedResponse.getStatus())
@@ -112,10 +117,9 @@ public class HttpLoggerFilter extends OncePerRequestFilter {
                 .responseContentLength(content.length);
 
         // get content as string or json map
-        String responseBody = new String(content, cachedResponse.getCharacterEncoding());
-
+        var responseBody = new String(content, cachedResponse.getCharacterEncoding());
         if (contentType != null && contentType.contains("application/json") && cachedResponse.getStatus() >= 200 && cachedResponse.getStatus() < 300) {
-            Map<String, String> responseJson = new ObjectMapper().readValue(responseBody, Map.class);
+            Map<String, String> responseJson = jsonMapper.readValue(responseBody, Map.class);
             httpLogDto.responseJson(responseJson);
         } else {
             httpLogDto.responseText(responseBody);

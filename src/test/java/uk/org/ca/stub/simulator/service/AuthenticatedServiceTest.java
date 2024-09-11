@@ -13,6 +13,10 @@ public interface AuthenticatedServiceTest {
     String VALID_AUTHORIZATION_HEADER = "Bearer " + UserDbInitializer.users.getFirst().getPat();
     String INVALID_AUTHORIZATION_HEADER = "wrong format"; // todo: implement test for not valid headers
 
+    static String authHeaderForPat(String pat) {
+        return "Bearer " + pat;
+    }
+
     BiConsumer<String, RegisteredResource> ALWAYS_AUTHORIZED = (a, x) -> {
     };
 

@@ -48,7 +48,7 @@ public class PermBody {
 
     @JsonCreator
     public static ResourceScopesEnum fromValue(String value) {
-      for (ResourceScopesEnum b : ResourceScopesEnum.values()) {
+      for (var b : ResourceScopesEnum.values()) {
         if (b.value.equals(value)) {
           return b;
         }
@@ -127,7 +127,7 @@ public class PermBody {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    PermBody permBody = (PermBody) o;
+    var permBody = (PermBody) o;
     return Objects.equals(this.resourceId, permBody.resourceId) &&
         Objects.equals(this.resourceScopes, permBody.resourceScopes);
   }
@@ -139,7 +139,7 @@ public class PermBody {
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder();
+    var sb = new StringBuilder();
     sb.append("class PermBody {\n");
     sb.append("    resourceId: ").append(toIndentedString(resourceId)).append("\n");
     sb.append("    resourceScopes: ").append(toIndentedString(resourceScopes)).append("\n");

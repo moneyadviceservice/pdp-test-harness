@@ -21,7 +21,7 @@ public class TokenService {
 
     public User retrievePAT(String uat) {
         logger.debug(">>> Retrieving token for user {}", uat);
-        User userFound = userRepository.findByUat(uat)
+        var userFound = userRepository.findByUat(uat)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         logger.trace(">>> Found user {}", userFound);
         return userFound;

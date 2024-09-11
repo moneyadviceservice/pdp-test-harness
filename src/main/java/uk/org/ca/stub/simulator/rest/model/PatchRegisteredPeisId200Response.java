@@ -1,19 +1,12 @@
 package uk.org.ca.stub.simulator.rest.model;
 
-import java.net.URI;
-import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.openapitools.jackson.nullable.JsonNullable;
-import java.time.OffsetDateTime;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.*;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
-
-import java.util.*;
-import jakarta.annotation.Generated;
+import java.util.Objects;
 
 /**
  * PatchRegisteredPeisId200Response
@@ -63,7 +56,7 @@ public class PatchRegisteredPeisId200Response {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    PatchRegisteredPeisId200Response patchRegisteredPeisId200Response = (PatchRegisteredPeisId200Response) o;
+    var patchRegisteredPeisId200Response = (PatchRegisteredPeisId200Response) o;
     return Objects.equals(this.resourceId, patchRegisteredPeisId200Response.resourceId);
   }
 
@@ -74,7 +67,7 @@ public class PatchRegisteredPeisId200Response {
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder();
+    var sb = new StringBuilder();
     sb.append("class PatchRegisteredPeisId200Response {\n");
     sb.append("    resourceId: ").append(toIndentedString(resourceId)).append("\n");
     sb.append("}");

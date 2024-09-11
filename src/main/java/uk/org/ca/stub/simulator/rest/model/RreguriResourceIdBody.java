@@ -1,11 +1,10 @@
 package uk.org.ca.stub.simulator.rest.model;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.annotation.JsonValue;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import uk.org.ca.stub.simulator.utils.MatchStatusEnum;
 
 import java.util.Objects;
 
@@ -16,38 +15,6 @@ import java.util.Objects;
 @JsonTypeName("rreguri_resource_id_body")
 public class RreguriResourceIdBody {
 
-  /**
-   * The new match status.
-   */
-  public enum MatchStatusEnum {
-    YES("match-yes");
-
-    private String value;
-
-    MatchStatusEnum(String value) {
-      this.value = value;
-    }
-
-    @JsonValue
-    public String getValue() {
-      return value;
-    }
-
-    @Override
-    public String toString() {
-      return String.valueOf(value);
-    }
-
-    @JsonCreator
-    public static MatchStatusEnum fromValue(String value) {
-      for (MatchStatusEnum b : MatchStatusEnum.values()) {
-        if (b.value.equals(value)) {
-          return b;
-        }
-      }
-      throw new IllegalArgumentException("Unexpected value '" + value + "'");
-    }
-  }
 
   private MatchStatusEnum matchStatus;
 
@@ -112,7 +79,7 @@ public class RreguriResourceIdBody {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    RreguriResourceIdBody rreguriResourceIdBody = (RreguriResourceIdBody) o;
+    var rreguriResourceIdBody = (RreguriResourceIdBody) o;
     return Objects.equals(this.matchStatus, rreguriResourceIdBody.matchStatus) &&
         Objects.equals(this.inboundRequestId, rreguriResourceIdBody.inboundRequestId);
   }
@@ -124,7 +91,7 @@ public class RreguriResourceIdBody {
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder();
+    var sb = new StringBuilder();
     sb.append("class RreguriResourceIdBody {\n");
     sb.append("    matchStatus: ").append(toIndentedString(matchStatus)).append("\n");
     sb.append("    inboundRequestId: ").append(toIndentedString(inboundRequestId)).append("\n");

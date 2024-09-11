@@ -56,7 +56,7 @@ public class InlineResponse201 {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    InlineResponse201 inlineResponse201 = (InlineResponse201) o;
+    var inlineResponse201 = (InlineResponse201) o;
     return Objects.equals(this.ticket, inlineResponse201.ticket);
   }
 
@@ -67,7 +67,7 @@ public class InlineResponse201 {
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder();
+    var sb = new StringBuilder();
     sb.append("class InlineResponse201 {\n");
     sb.append("    ticket: ").append(toIndentedString(ticket)).append("\n");
     sb.append("}");
