@@ -14,11 +14,12 @@ import uk.org.ca.stub.simulator.rest.exception.ConflictException;
 import uk.org.ca.stub.simulator.rest.exception.InvalidRequestException;
 import uk.org.ca.stub.simulator.rest.exception.NotFoundException;
 import uk.org.ca.stub.simulator.rest.model.RreguriBody;
+import uk.org.ca.stub.simulator.utils.MatchStatusEnum;
 
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.UUID;
-import uk.org.ca.stub.simulator.utils.MatchStatusEnum;
+
 import static uk.org.ca.stub.simulator.utils.MatchStatusEnum.*;
 
 @Service
@@ -131,20 +132,15 @@ public class RegisterService extends AbstractAuthenticatedService {
     }
 
     protected void verifyValidDeleteState(RegisteredResource resource, String deletionReason) {
-        final String INVALID_STATE_FOR_DELETION_REASON_MSG = "The find match status must be %s for allow to be deleted using  %s or %s";
         //  the only allowed values for deletion_reason are ‘match-no’, ‘match-timeout’, ‘match-withdrawn’ and ‘asset-removed’. If the request does not conform, the C&A Stub must return http status 400
         if (supportedStatusForDeletion.stream().noneMatch(s -> s.toString().equals(deletionReason))) {
             throw new InvalidRequestException(String.format("The delete reason is not one of the allowed %s vs %s", resource.getMatchStatus(), supportedStatusForDeletion));
         }
 
-        // If the deletion_reason is ‘match-no’ or ‘match-timeout’ and the stored resource match_status is not ‘match-possible’ the stub C&A must return http status 400 (bad request).
-        if ((deletionReason.equals(NO.toString()) || deletionReason.equals(TIMEOUT.toString())) && !resource.getMatchStatus().equals(POSSIBLE.toString())) {
-            throw new InvalidRequestException(String.format(INVALID_STATE_FOR_DELETION_REASON_MSG, POSSIBLE, NO, TIMEOUT));
-        }
-
-        // If the deletion_reason is ‘match-withdrawn’ or ‘asset-removed’ and the stored resource match_status is not ‘match-yes’ the stub C&A must return http status 400 (bad request).
-        if ((deletionReason.equals(WITHDRAWN.toString()) || deletionReason.equals(REMOVED.toString())) && !resource.getMatchStatus().equals(YES.toString())) {
-            throw new InvalidRequestException(String.format(INVALID_STATE_FOR_DELETION_REASON_MSG, YES, WITHDRAWN, REMOVED));
+        if (resource.getMatchStatus().equals(YES.toString()) &&
+                (deletionReason.equals(NO.toString()) || deletionReason.equals(TIMEOUT.toString()))
+        ) {
+            throw new InvalidRequestException(String.format("Delete reason '%s' not valid for the resource match status: '%s'", deletionReason, resource.getMatchStatus()));
         }
     }
 }

@@ -12,13 +12,13 @@ import uk.org.ca.stub.simulator.rest.exception.InvalidRequestException;
 import uk.org.ca.stub.simulator.rest.exception.NotFoundException;
 import uk.org.ca.stub.simulator.rest.exception.UnauthorizedException;
 import uk.org.ca.stub.simulator.rest.model.RreguriBody;
+import uk.org.ca.stub.simulator.utils.MatchStatusEnum;
 
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static uk.org.ca.stub.simulator.service.AuthenticatedServiceTest.*;
 import static uk.org.ca.stub.simulator.service.RegisterService.validatePatAuthorizationFunction;
-import uk.org.ca.stub.simulator.utils.MatchStatusEnum;
 import static uk.org.ca.stub.simulator.utils.MatchStatusEnum.*;
 
 @ActiveProfiles("test")
@@ -120,24 +120,25 @@ class RegisterServiceTest {
 
     @Test
     void verifyValidDeleteState() {
-        // todo: checked there is not other missing statuses
-        assertAll("Correct states for deletion",
-                // If the deletion_reason is ‘match-no’ or ‘match-timeout’ and the stored resource match_status is not ‘match-possible’ the stub C&A must return http status 400 (bad request).
-                () -> assertThrows(InvalidRequestException.class, () -> cut.verifyValidDeleteState(buildFindWithGivenState(YES), NO.toString())),
-                () -> assertThrows(InvalidRequestException.class, () -> cut.verifyValidDeleteState(buildFindWithGivenState(YES), TIMEOUT.toString())),
-
-                // If the deletion_reason is ‘match-withdrawn’ or ‘asset-removed’ and the stored resource match_status is not ‘match-yes’ the stub C&A must return http status 400 (bad request).
-                () -> assertThrows(InvalidRequestException.class, () -> cut.verifyValidDeleteState(buildFindWithGivenState(POSSIBLE), REMOVED.toString())),
-                () -> assertThrows(InvalidRequestException.class, () -> cut.verifyValidDeleteState(buildFindWithGivenState(POSSIBLE), WITHDRAWN.toString())),
-
-                () -> assertDoesNotThrow(() -> cut.verifyValidDeleteState(buildFindWithGivenState(POSSIBLE), NO.toString())),
-                () -> assertDoesNotThrow(() -> cut.verifyValidDeleteState(buildFindWithGivenState(POSSIBLE), TIMEOUT.toString())),
-
-                () -> assertDoesNotThrow(() -> cut.verifyValidDeleteState(buildFindWithGivenState(YES), WITHDRAWN.toString())),
-                () -> assertDoesNotThrow(() -> cut.verifyValidDeleteState(buildFindWithGivenState(YES), REMOVED.toString()))
+        assertAll(
+            // Match-yes
+            // invalid scenarios
+            () -> assertThrows(InvalidRequestException.class, () -> cut.verifyValidDeleteState(buildFindWithGivenState(YES), NO.toString())),
+            () -> assertThrows(InvalidRequestException.class, () -> cut.verifyValidDeleteState(buildFindWithGivenState(YES), TIMEOUT.toString())),
+            () -> assertThrows(InvalidRequestException.class, () -> cut.verifyValidDeleteState(buildFindWithGivenState(YES), "randomReason")),
+            // valid scenarios
+            () -> assertDoesNotThrow(() -> cut.verifyValidDeleteState(buildFindWithGivenState(YES), WITHDRAWN.toString())),
+            () -> assertDoesNotThrow(() -> cut.verifyValidDeleteState(buildFindWithGivenState(YES), REMOVED.toString())),
+            // Match-possible
+            // invalid scenario
+            () -> assertThrows(InvalidRequestException.class, () -> cut.verifyValidDeleteState(buildFindWithGivenState(POSSIBLE), "randomReason")),
+            // valid scenarios
+            () -> assertDoesNotThrow(() -> cut.verifyValidDeleteState(buildFindWithGivenState(POSSIBLE), REMOVED.toString())),
+            () -> assertDoesNotThrow(() -> cut.verifyValidDeleteState(buildFindWithGivenState(POSSIBLE), WITHDRAWN.toString())),
+            () -> assertDoesNotThrow(() -> cut.verifyValidDeleteState(buildFindWithGivenState(POSSIBLE), TIMEOUT.toString())),
+            () -> assertDoesNotThrow(() -> cut.verifyValidDeleteState(buildFindWithGivenState(POSSIBLE), NO.toString()))
         );
     }
-
     private static RegisteredResource buildFindWithGivenState(MatchStatusEnum status) {
         return RegisteredResource.builder().matchStatus(status.toString()).build();
     }

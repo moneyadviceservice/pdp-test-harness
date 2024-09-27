@@ -2,6 +2,11 @@
 
 The following document shows the changes introduced in each version of the C&A Stub.
 
+## v1.1.5 - 27 Sep 2024
+* Fix the regex pattern for the `name` parameter in the `rreguri` API
+* Fix logic for the valid deletion reasons depending on the match status
+* Correct typo on "pension_dashboard_rqp" on the `token` API
+
 ## v1.1.4 - 23 Aug 2024
 * Fix bug on log when a parameter value is null
 * 429 response to include “Retry-after” header.

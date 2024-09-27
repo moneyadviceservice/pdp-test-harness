@@ -15,9 +15,11 @@ import uk.org.ca.stub.simulator.utils.MatchStatusEnum;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static uk.org.ca.stub.simulator.configuration.dbinitializer.ResourceDbInitializer.DEFAULT_RESOURCES;
+import static uk.org.ca.stub.simulator.rest.model.RreguriBody.NAME_REGEX_PATTERN;
 import static uk.org.ca.stub.simulator.utils.AssertionsConstants.*;
 
 class RreguriApiControllerTest extends AbstractControllerTest {
@@ -48,7 +50,7 @@ class RreguriApiControllerTest extends AbstractControllerTest {
     void postShouldReturn20x() {
         assertAll(
                 () -> {
-                    var response = restTemplate.postForEntity(endpoint, createPostPatchRrequriWithResourceName(AuthenticatedServiceTest.VALID_AUTHORIZATION_HEADER, newResourceId,MatchStatusEnum.YES), String.class);
+                    var response = restTemplate.postForEntity(endpoint, createPostPatchRrequriWithResourceName(AuthenticatedServiceTest.VALID_AUTHORIZATION_HEADER, newResourceId, MatchStatusEnum.YES), String.class);
                     assertEquals(HttpStatus.CREATED, response.getStatusCode());
                     assertTrue(response.getHeaders().containsKey(HttpHeaders.LOCATION));
                 },
@@ -84,7 +86,24 @@ class RreguriApiControllerTest extends AbstractControllerTest {
                 },
                 () -> {
                     registerService.setPatStoredValidator(AuthenticatedServiceTest.ALWAYS_NOT_STORED);
-                    var response = restTemplate.postForEntity(endpoint, createPostPatchRrequriWithResourceName(AuthenticatedServiceTest.VALID_AUTHORIZATION_HEADER, newResourceId,MatchStatusEnum.YES), String.class);
+                    var response = restTemplate.postForEntity(endpoint, createPostPatchRrequriWithResourceName(AuthenticatedServiceTest.VALID_AUTHORIZATION_HEADER, newResourceId, MatchStatusEnum.YES), String.class);
+                    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+                }
+        );
+    }
+
+    @Test
+    @Description("POST 400")
+    void postShouldReturn400_correctionLog() {
+        String malformedName = "urn:pei:0e55140a-87d3-41cf-b6f7-:6e29eeb8-814c-44a6-a43f-b4830f3f45bb";
+        assertAll(
+                ()->{
+                    Pattern correctPattern = Pattern.compile(NAME_REGEX_PATTERN);
+                    assertFalse(correctPattern.matcher(malformedName).matches());
+                },
+                () -> {
+                    registerService.setPatStoredValidator(AuthenticatedServiceTest.ALWAYS_STORED);
+                    var response = restTemplate.postForEntity(endpoint, createPostPatchRrequriWithResourceName(AuthenticatedServiceTest.VALID_AUTHORIZATION_HEADER, malformedName, MatchStatusEnum.YES), String.class);
                     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
                 }
         );
@@ -96,17 +115,17 @@ class RreguriApiControllerTest extends AbstractControllerTest {
         assertAll(
                 () -> {
                     registerService.setPatStoredValidator(AuthenticatedServiceTest.ALWAYS_NOT_STORED);
-                    var response = restTemplate.postForEntity(endpoint, createPostPatchRrequriWithResourceName(AuthenticatedServiceTest.authHeaderForPat(ASSERTION_PAT_RREGURI_POST_401_EXPIRED_PAT), newResourceId,MatchStatusEnum.YES), String.class);
+                    var response = restTemplate.postForEntity(endpoint, createPostPatchRrequriWithResourceName(AuthenticatedServiceTest.authHeaderForPat(ASSERTION_PAT_RREGURI_POST_401_EXPIRED_PAT), newResourceId, MatchStatusEnum.YES), String.class);
                     assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
                 },
                 () -> {
                     registerService.setPatStoredValidator(AuthenticatedServiceTest.ALWAYS_NOT_STORED);
-                    var response = restTemplate.postForEntity(endpoint, createPostPatchRrequriWithResourceName(AuthenticatedServiceTest.authHeaderForPat(ASSERTION_PAT_RREGURI_POST_404_USER_REMOVED), newResourceId,MatchStatusEnum.YES), String.class);
+                    var response = restTemplate.postForEntity(endpoint, createPostPatchRrequriWithResourceName(AuthenticatedServiceTest.authHeaderForPat(ASSERTION_PAT_RREGURI_POST_404_USER_REMOVED), newResourceId, MatchStatusEnum.YES), String.class);
                     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
                 },
                 () -> {
                     registerService.setPatStoredValidator(AuthenticatedServiceTest.ALWAYS_NOT_STORED);
-                    var response = restTemplate.postForEntity(endpoint, createPostPatchRrequriWithResourceName(AuthenticatedServiceTest.authHeaderForPat(ASSERTION_PAT_RREGURI_POST_429_TOO_MANY_REQUESTS), newResourceId,MatchStatusEnum.YES), String.class);
+                    var response = restTemplate.postForEntity(endpoint, createPostPatchRrequriWithResourceName(AuthenticatedServiceTest.authHeaderForPat(ASSERTION_PAT_RREGURI_POST_429_TOO_MANY_REQUESTS), newResourceId, MatchStatusEnum.YES), String.class);
                     assertEquals(HttpStatus.TOO_MANY_REQUESTS, response.getStatusCode());
                     assertTrue(response.getHeaders().containsKey(HttpHeaders.RETRY_AFTER));
                 }
@@ -118,19 +137,19 @@ class RreguriApiControllerTest extends AbstractControllerTest {
     void postShouldReturn50x() {
         assertAll(
                 () -> {
-                    var response = restTemplate.postForEntity(endpoint, createPostPatchRrequriWithResourceName(AuthenticatedServiceTest.authHeaderForPat(ASSERTION_PAT_RREGURI_POST_500_SERVER_ERROR), newResourceId,MatchStatusEnum.YES), String.class);
+                    var response = restTemplate.postForEntity(endpoint, createPostPatchRrequriWithResourceName(AuthenticatedServiceTest.authHeaderForPat(ASSERTION_PAT_RREGURI_POST_500_SERVER_ERROR), newResourceId, MatchStatusEnum.YES), String.class);
                     assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
                 },
                 () -> {
-                    var response = restTemplate.postForEntity(endpoint, createPostPatchRrequriWithResourceName(AuthenticatedServiceTest.authHeaderForPat(ASSERTION_PAT_RREGURI_POST_502_BAD_GATEWAY), newResourceId,MatchStatusEnum.YES), String.class);
+                    var response = restTemplate.postForEntity(endpoint, createPostPatchRrequriWithResourceName(AuthenticatedServiceTest.authHeaderForPat(ASSERTION_PAT_RREGURI_POST_502_BAD_GATEWAY), newResourceId, MatchStatusEnum.YES), String.class);
                     assertEquals(HttpStatus.BAD_GATEWAY, response.getStatusCode());
                 },
                 () -> {
-                    var response = restTemplate.postForEntity(endpoint, createPostPatchRrequriWithResourceName(AuthenticatedServiceTest.authHeaderForPat(ASSERTION_PAT_RREGURI_POST_503_SERVICE_UNAVAILABLE), newResourceId,MatchStatusEnum.YES), String.class);
+                    var response = restTemplate.postForEntity(endpoint, createPostPatchRrequriWithResourceName(AuthenticatedServiceTest.authHeaderForPat(ASSERTION_PAT_RREGURI_POST_503_SERVICE_UNAVAILABLE), newResourceId, MatchStatusEnum.YES), String.class);
                     assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());
                 },
                 () -> {
-                    var response = restTemplate.postForEntity(endpoint, createPostPatchRrequriWithResourceName(AuthenticatedServiceTest.authHeaderForPat(ASSERTION_PAT_RREGURI_POST_504_GATEWAY_TIMEOUT), newResourceId,MatchStatusEnum.YES), String.class);
+                    var response = restTemplate.postForEntity(endpoint, createPostPatchRrequriWithResourceName(AuthenticatedServiceTest.authHeaderForPat(ASSERTION_PAT_RREGURI_POST_504_GATEWAY_TIMEOUT), newResourceId, MatchStatusEnum.YES), String.class);
                     assertEquals(HttpStatus.GATEWAY_TIMEOUT, response.getStatusCode());
                 }
         );
