@@ -121,7 +121,7 @@ public class JwtService {
 
         var res = new IntrospectionResultPermissions();
 
-        res.resourceId(UUID.fromString(resourceId));
+        res.resourceId(resourceId);
         var exp = ((Number) stringObjectMap.get("exp")).longValue();
         res.exp(exp);
 
@@ -134,7 +134,8 @@ public class JwtService {
         if (permissions != null) {
             // due to /rreguri Open API specs allow "delegate" as scope, but /introspect doesn't, it's ignored with
             // this `continue` until it's clarified and the specs are updated.
-            ((ArrayList<String>) permissions).stream()
+            ((java.util.List<?>) permissions).stream()
+                    .map(Object::toString)
                     .filter(perm -> !RreguriBody.ResourceScopesEnum.DELEGATE.getValue().equals(perm))
                     .map(IntrospectionResultPermissions.ResourceScopesEnum::fromValue)
                     .forEach(res::addResourceScopesItem);

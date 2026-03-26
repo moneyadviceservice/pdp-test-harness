@@ -1,0 +1,36 @@
+---
+servers:
+- url: "/"
+- url: "https://localhost:8080"
+- url: "http://localhost:3000"
+- url: "https://virtserver.swaggerhub.com/PensionsDashboard/reporting-api/2.1"
+openapi: "3.0.0"
+paths:
+  /token:
+    $ref: "./token v1_2.yaml#/paths/~1token"
+  /service-availability/find:
+    $ref: "./reporting-api-v2_1.yaml#/paths/~1service-availability~1find"
+  /perm:
+    $ref: "./perm v1_1.yaml#/paths/~1perm"
+  /view-response/response-time:
+    $ref: "./reporting-api-v2_1.yaml#/paths/~1view-response~1response-time"
+  /view-response/unavailable:
+    $ref: "./reporting-api-v2_1.yaml#/paths/~1view-response~1unavailable"
+  /introspect:
+    $ref: "./introspect v1_1.yaml#/paths/~1introspect"
+  /service-availability/view:
+    $ref: "./reporting-api-v2_1.yaml#/paths/~1service-availability~1view"
+  /view-response/calculations:
+    $ref: "./reporting-api-v2_1.yaml#/paths/~1view-response~1calculations"
+  /configuration:
+    $ref: "./configuration v1_1.yaml#/paths/~1configuration"
+  /rreguri/{resource_id}:
+    $ref: "./rreguri v1_2.yaml#/paths/~1rreguri~1{resource_id}"
+  /view-response/request-number:
+    $ref: "./reporting-api-v2_1.yaml#/paths/~1view-response~1request-number"
+  /rreguri:
+    $ref: "./rreguri v1_2.yaml#/paths/~1rreguri"
+info:
+  title: "merged spec"
+  description: "merged spec"
+  version: "1.0.0"

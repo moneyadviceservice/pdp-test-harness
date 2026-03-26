@@ -63,7 +63,7 @@ public class IntrospectApiControllerTest extends AbstractControllerTest {
 
                     List<IntrospectionResultPermissions> permissions = new ArrayList<>();
                     IntrospectionResultPermissions permission = new IntrospectionResultPermissions();
-                    permission.resourceId(UUID.fromString("92476c2f-25b8-4d87-afde-18a9ee2631dc")).addResourceScopesItem(IntrospectionResultPermissions.ResourceScopesEnum.OWNER).exp(Long.valueOf("1813411040"));
+                    permission.resourceId("92476c2f-25b8-4d87-afde-18a9ee2631dc").addResourceScopesItem(IntrospectionResultPermissions.ResourceScopesEnum.OWNER).exp(Long.valueOf("1813411040"));
                     permissions.add(permission);
 
                     IntrospectionResult targetResult = new IntrospectionResult()
@@ -82,7 +82,7 @@ public class IntrospectApiControllerTest extends AbstractControllerTest {
 
                     List<IntrospectionResultPermissions> permissions = new ArrayList<>();
                     IntrospectionResultPermissions permission = new IntrospectionResultPermissions();
-                    permission.resourceId(UUID.fromString("62933ca9-447e-4ce0-bb39-124e9fa3214f")).addResourceScopesItem(IntrospectionResultPermissions.ResourceScopesEnum.OWNER).exp(Long.valueOf("1624197800"));
+                    permission.resourceId("62933ca9-447e-4ce0-bb39-124e9fa3214f").addResourceScopesItem(IntrospectionResultPermissions.ResourceScopesEnum.OWNER).exp(Long.valueOf("1624197800"));
                     permissions.add(permission);
 
                     IntrospectionResult targetResult = new IntrospectionResult()

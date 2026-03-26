@@ -37,9 +37,9 @@ class PermServiceTest {
     void testValidResource() throws Exception {
         permService.setPatAuthorizationValidator(ALWAYS_AUTHORIZED);
         permService.setPatStoredValidator(ALWAYS_STORED);
-        var firstResource = ResourceDbInitializer.DEFAULT_RESOURCES.getFirst();
+        var firstResource = ResourceDbInitializer.getDefaultResources().getFirst();
         var body = new PermBody();
-        body.setResourceId(UUID.fromString(firstResource.getResourceId()));
+        body.setResourceId(firstResource.getResourceId());
         body.resourceScopes(List.of(PermBody.ResourceScopesEnum.VALUE, PermBody.ResourceScopesEnum.OWNER));
 
         var pmt = permService.generatePMT(body, UUID.randomUUID(), VALID_AUTHORIZATION_HEADER);
@@ -52,7 +52,7 @@ class PermServiceTest {
             var tokenMap = mapper.readValue(new String(decodedPmt), Map.class);
             assertEquals(JwtService.TokenInstance.PMT.getType(), tokenMap.get("token_type"));
             var jwt = tokenMap.get("access_token").toString();
-            assertEquals(body.getResourceId().toString(), jwtParser.parseSignedClaims(jwt).getPayload().get("resource_id"));
+            assertEquals(body.getResourceId(), jwtParser.parseSignedClaims(jwt).getPayload().get("resource_id"));
         } catch (Exception e) {
             throw new Exception("Could not verify JWT token integrity!", e);
         }
@@ -63,7 +63,7 @@ class PermServiceTest {
         permService.setPatAuthorizationValidator(ALWAYS_AUTHORIZED);
         permService.setPatStoredValidator(ALWAYS_STORED);
         var body = new PermBody();
-        body.setResourceId(UUID.randomUUID());
+        body.setResourceId(UUID.randomUUID().toString());
         body.resourceScopes(List.of(PermBody.ResourceScopesEnum.VALUE, PermBody.ResourceScopesEnum.OWNER));
 
         assertThrows(NotFoundException.class, () -> permService.generatePMT(body, UUID.randomUUID(), VALID_AUTHORIZATION_HEADER), "Resource not found");
@@ -71,9 +71,9 @@ class PermServiceTest {
 
     @Test
     void testAuthenticationErrors() {
-        var firstResource = ResourceDbInitializer.DEFAULT_RESOURCES.getFirst();
+        var firstResource = ResourceDbInitializer.getDefaultResources().getFirst();
         var body = new PermBody();
-        body.setResourceId(UUID.fromString(firstResource.getResourceId()));
+        body.setResourceId(firstResource.getResourceId());
         body.resourceScopes(List.of(PermBody.ResourceScopesEnum.VALUE, PermBody.ResourceScopesEnum.OWNER));
 
         assertAll("Errors due to authentication",

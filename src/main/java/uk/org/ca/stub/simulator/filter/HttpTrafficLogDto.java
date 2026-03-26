@@ -1,15 +1,15 @@
 package uk.org.ca.stub.simulator.filter;
 
-import jakarta.servlet.http.HttpServletRequest;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 
 @Builder
 @Setter
@@ -33,7 +33,7 @@ public class HttpTrafficLogDto {
     String responseContentEncoding;
     int responseContentLength;
     String responseText;
-    Map<String, String> responseJson;
+    Map<String, Object> responseJson;
 
 
     @Override
@@ -93,7 +93,7 @@ public class HttpTrafficLogDto {
         }
         if (responseJson != null && !responseJson.isEmpty()) {
             res.add("   * Response JSON:\n");
-            for (Map.Entry<String, String> entry : responseJson.entrySet()) {
+            for (Map.Entry<String, Object> entry : responseJson.entrySet()) {
                 res.add(String.format(indentedKeyValue, entry.getKey(), entry.getValue()));
             }
         }

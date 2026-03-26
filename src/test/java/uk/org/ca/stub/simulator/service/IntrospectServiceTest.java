@@ -42,7 +42,7 @@ public class IntrospectServiceTest {
             List<IntrospectionResultPermissions> targetPermissions = new ArrayList<>();
 
             IntrospectionResultPermissions permission = new IntrospectionResultPermissions();
-            permission.resourceId(UUID.fromString("92476c2f-25b8-4d87-afde-18a9ee2631dc")); //resId matching the VALID_RPT_TOKEN
+            permission.resourceId("92476c2f-25b8-4d87-afde-18a9ee2631dc"); //resId matching the VALID_RPT_TOKEN
             permission.exp(exp);
             permission.addResourceScopesItem(IntrospectionResultPermissions.ResourceScopesEnum.OWNER);
 
@@ -76,7 +76,7 @@ public class IntrospectServiceTest {
             List<IntrospectionResultPermissions> targetPermissions = new ArrayList<>();
 
             IntrospectionResultPermissions permission = new IntrospectionResultPermissions();
-            permission.resourceId(UUID.fromString("62933ca9-447e-4ce0-bb39-124e9fa3214f")); //resId matching the EXPIRED_RPT_TOKEN
+            permission.resourceId("62933ca9-447e-4ce0-bb39-124e9fa3214f"); //resId matching the EXPIRED_RPT_TOKEN
             permission.exp(exp);
             permission.addResourceScopesItem(IntrospectionResultPermissions.ResourceScopesEnum.OWNER);
 

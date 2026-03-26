@@ -32,7 +32,7 @@ public class PermApiController extends AbstractApiController implements PermApi 
     public ResponseEntity<InlineResponse201> postPerm(UUID xRequestID, PermBody permBody, HttpServletRequest request) {
         String pat = getTokenFromHeader(request.getHeader(HttpHeaders.AUTHORIZATION));
 
-        ResponseEntity asssertedResponse = checkTokenForAssertionsForPerm(pat);
+        ResponseEntity<InlineResponse201> asssertedResponse = checkTokenForAssertionsForPerm(pat);
         if (asssertedResponse != null) {
             return asssertedResponse;
         }

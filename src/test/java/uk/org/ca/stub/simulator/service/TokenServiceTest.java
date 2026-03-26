@@ -18,7 +18,7 @@ class TokenServiceTest {
 
     @Test
     void testsAll() {
-        var first = UserDbInitializer.users.getFirst();
+        var first = UserDbInitializer.getDefaultUsers().getFirst();
         assertAll("initialization worked",
                 () -> assertEquals(first.getPat(), cut.retrievePAT(first.getUat()).getPat()),
                 () -> assertThrows(NotFoundException.class, () -> cut.retrievePAT("nonexistent").getPat())

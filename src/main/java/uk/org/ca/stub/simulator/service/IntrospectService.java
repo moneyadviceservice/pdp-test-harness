@@ -108,7 +108,7 @@ public class IntrospectService extends AbstractAuthenticatedService {
 
     private IntrospectionResultPermissions buildPerm(String pat, long exp, List<IntrospectionResultPermissions.ResourceScopesEnum> scopes) {
         var perm = new IntrospectionResultPermissions();
-        perm.resourceId(UUID.fromString(getLastRegisteredIdResourceByPat(pat)));
+        perm.resourceId(getLastRegisteredIdResourceByPat(pat));
         perm.exp(exp);
         scopes.forEach(perm::addResourceScopesItem);
         return perm;

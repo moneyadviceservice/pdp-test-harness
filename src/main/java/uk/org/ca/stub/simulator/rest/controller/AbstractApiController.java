@@ -2,6 +2,10 @@ package uk.org.ca.stub.simulator.rest.controller;
 
 import org.springframework.http.*;
 import uk.org.ca.stub.simulator.rest.exception.InvalidRequestException;
+import uk.org.ca.stub.simulator.rest.model.InlineResponse201;
+import uk.org.ca.stub.simulator.rest.model.IntrospectionResult;
+import uk.org.ca.stub.simulator.rest.model.PatchRegisteredPeisId200Response;
+import uk.org.ca.stub.simulator.rest.model.PostRegisteredPeis201Response;
 import uk.org.ca.stub.simulator.rest.model.RetrieveUmaToken400Response;
 
 import java.util.random.RandomGenerator;
@@ -49,7 +53,7 @@ public abstract class AbstractApiController {
         };
     }
 
-    protected static ResponseEntity checkTokenForAssertionsForRreguriPost(String pat){
+    protected static ResponseEntity<PostRegisteredPeis201Response> checkTokenForAssertionsForRreguriPost(String pat){
         if (pat == null || pat.isEmpty()){
             return null;
         }
@@ -73,7 +77,7 @@ public abstract class AbstractApiController {
         };
     }
 
-    protected static ResponseEntity checkTokenForAssertionsForRreguriPatch(String pat){
+    protected static ResponseEntity<PatchRegisteredPeisId200Response> checkTokenForAssertionsForRreguriPatch(String pat){
         if (pat == null || pat.isEmpty()){
             return null;
         }
@@ -97,7 +101,7 @@ public abstract class AbstractApiController {
         };
     }
 
-    protected static ResponseEntity checkTokenForAssertionsForRreguriDelete(String pat){
+    protected static ResponseEntity<Void> checkTokenForAssertionsForRreguriDelete(String pat){
         if (pat == null || pat.isEmpty()){
             return null;
         }
@@ -119,7 +123,7 @@ public abstract class AbstractApiController {
         };
     }
 
-    protected static ResponseEntity checkTokenForAssertionsForIntrospect(String rpt){
+    protected static ResponseEntity<IntrospectionResult> checkTokenForAssertionsForIntrospect(String rpt){
         if (rpt == null || rpt.isEmpty()){
             return null;
         }
@@ -143,7 +147,7 @@ public abstract class AbstractApiController {
         };
     }
 
-    protected static ResponseEntity checkTokenForAssertionsForPerm(String pat){
+    protected static ResponseEntity<InlineResponse201> checkTokenForAssertionsForPerm(String pat){
         if (pat == null || pat.isEmpty()){
             return null;
         }

@@ -1,18 +1,25 @@
 package uk.org.ca.stub.simulator.rest.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-
+import java.net.URI;
 import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.time.OffsetDateTime;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
+import io.swagger.v3.oas.annotations.media.Schema;
+
+
+import java.util.*;
+import jakarta.annotation.Generated;
 
 /**
  * InlineResponse201
  */
 
 @JsonTypeName("inline_response_201")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-02-13T15:34:29.284844400Z[Europe/London]", comments = "Generator version: 7.5.0")
 public class InlineResponse201 {
 
   private String ticket;
@@ -37,7 +44,7 @@ public class InlineResponse201 {
    * The permissions token for the requested resource_id for the requested scopes.
    * @return ticket
   */
-  @NotNull @Pattern(regexp = "^([a-zA-Z0-9_=]+)\\.([a-zA-Z0-9_=]+)\\.([a-zA-Z0-9_\\-\\+/=]*)")
+  @NotNull @Pattern(regexp = "^([a-zA-Z0-9_=]+)\\.([a-zA-Z0-9_=]+)\\.([a-zA-Z0-9_\\-\\+/=]*)") 
   @Schema(name = "ticket", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NjY4ODk3Ny0yNzNlLTQ0NzItOTI5ZS0xODExNTc0Mzc0MzMiLCJhdWQiOiJodHRwczovL2ludC5wZW5zaW9uc2Rhc2hib2FyZHMub3JnLnVrL2FtL29hdXRoMiIsIm5iZiI6MTcwNDM3MzI5OCwiaXNzIjoiaHR0cDovL3BlbnNpb25zZGFzaGJvYXJkLm9yZy9wZnNpc3N1ZXIiLCJuYW1lIjoiYTFlNWNlNDJhOTgxMGUyNTkxMzVmZTA2YWJmMDIzOGUxM2U5MzA0YSIsImV4cCI6MTcwNDM3MzM1MCwiaWF0IjoxNzA0MzczMjk4fQ.U7JTocRa2rejt29Bg418CbZx2YJBrqvqhCe4jNo3FEQ", description = "The permissions token for the requested resource_id for the requested scopes.", requiredMode = Schema.RequiredMode.REQUIRED)
   @JsonProperty("ticket")
   public String getTicket() {
@@ -56,7 +63,7 @@ public class InlineResponse201 {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    var inlineResponse201 = (InlineResponse201) o;
+    InlineResponse201 inlineResponse201 = (InlineResponse201) o;
     return Objects.equals(this.ticket, inlineResponse201.ticket);
   }
 
@@ -67,7 +74,7 @@ public class InlineResponse201 {
 
   @Override
   public String toString() {
-    var sb = new StringBuilder();
+    StringBuilder sb = new StringBuilder();
     sb.append("class InlineResponse201 {\n");
     sb.append("    ticket: ").append(toIndentedString(ticket)).append("\n");
     sb.append("}");

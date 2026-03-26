@@ -5,7 +5,7 @@
 ARG API_PORT=8443
 ARG UNSECURE_API_PORT=8081
 
-FROM --platform=$BUILDPLATFORM gradle:8.8-jdk21 AS build
+FROM --platform=$BUILDPLATFORM gradle:jdk21-corretto-al2023 AS build
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 RUN echo " :::::::::::::::::::: Running on $BUILDPLATFORM, building for $TARGETPLATFORM ::::::::::::::::::::"
@@ -16,10 +16,7 @@ COPY --chown=root:root --chmod=755 settings.gradle settings.gradle
 COPY --chown=root:root --chmod=755 build.gradle build.gradle
 RUN gradle --no-daemon
 
-FROM amazoncorretto:21-al2023
-# Alternative base images:
-# * amazoncorretto:21-alpine
-# * alpine/java:21-jdk
+FROM amazoncorretto:21-alpine
 ARG API_PORT
 ARG UNSECURE_API_PORT
 ARG TARGETPLATFORM
@@ -34,9 +31,12 @@ COPY --chown=root:root --chmod=555 mTLS/server-trust-store.p12 /cas/mTLS/server-
 #COPY --chown=root:root --chmod=755 mTLS/server-key-store.p12 /cas/mTLS/server-key-store.p12
 
 RUN echo " :::::::::::::::::::: Running on $BUILDPLATFORM, building for $TARGETPLATFORM ::::::::::::::::::::" \
+ && mkdir -p /cas/logs \
  && chown 1000:1000 -R /cas \
- && yum update \
- && yum install -y openssl
+ && chmod 755 /cas/mTLS \
+ && apk upgrade --no-cache \
+ && apk add --no-cache bash dos2unix openssl \
+ && dos2unix /cas/start_stub_wrapper.sh /cas/cert-manager.sh
 
 USER 1000:1000
 ENV PORT=${API_PORT}

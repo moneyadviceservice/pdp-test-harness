@@ -1,0 +1,8 @@
+# Default: auto-normalize line endings on checkout
+* text=auto
+
+# Shell scripts must always use LF
+*.sh text eol=lf
+
+# Gradle wrapper must use LF on Unix
+gradlew text eol=lf

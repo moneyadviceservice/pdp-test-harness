@@ -10,7 +10,7 @@ import uk.org.ca.stub.simulator.rest.exception.UnauthorizedException;
 import java.util.function.BiConsumer;
 
 public interface AuthenticatedServiceTest {
-    String VALID_AUTHORIZATION_HEADER = "Bearer " + UserDbInitializer.users.getFirst().getPat();
+    String VALID_AUTHORIZATION_HEADER = "Bearer " + UserDbInitializer.getDefaultUsers().getFirst().getPat();
     String INVALID_AUTHORIZATION_HEADER = "wrong format"; // todo: implement test for not valid headers
 
     static String authHeaderForPat(String pat) {

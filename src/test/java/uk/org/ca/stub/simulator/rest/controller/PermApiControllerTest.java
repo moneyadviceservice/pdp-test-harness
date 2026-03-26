@@ -189,7 +189,7 @@ class PermApiControllerTest extends AbstractControllerTest {
 
         var body = new PermBody();
         if (resourceId != null) {
-            body.setResourceId(UUID.fromString(resourceId));
+            body.setResourceId(resourceId);
         }
         if (resourceScopes != null) {
             body.setResourceScopes(resourceScopes);

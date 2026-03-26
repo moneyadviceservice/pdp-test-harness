@@ -38,7 +38,7 @@ class InterceptorTests extends AbstractControllerTest {
                 },
                 () -> {
                     var body = new PermBody();
-                    body.setResourceId(UUID.randomUUID());
+                    body.setResourceId(UUID.randomUUID().toString());
                     body.resourceScopes(List.of(PermBody.ResourceScopesEnum.VALUE, PermBody.ResourceScopesEnum.OWNER));
                     var response_perm = this.restTemplate.postForEntity("https://localhost:" + port + "/perm",body, String.class);
                     assertAll("/perm request without 'x-request-id' is dropped like a hot potato",
@@ -64,7 +64,7 @@ class InterceptorTests extends AbstractControllerTest {
                 },
                 () -> {
                     var body = new PermBody();
-                    body.setResourceId(UUID.randomUUID());
+                    body.setResourceId(UUID.randomUUID().toString());
                     body.resourceScopes(List.of(PermBody.ResourceScopesEnum.VALUE, PermBody.ResourceScopesEnum.OWNER));
                     var request = new HttpEntity<>(body, headers);
                     var response = this.restTemplate.exchange( "https://localhost:" + port + "/perm",

@@ -16,6 +16,7 @@ import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -43,19 +44,44 @@ public class HttpLoggerFilter extends OncePerRequestFilter {
         this.clientAuthConfig = clientAuthConfig;
     }
 
+    private static final long MAX_PAYLOAD_BYTES = 1_048_576L;
+    private static final List<String> SIZE_LIMITED_ENDPOINTS = List.of(
+            "/service-availability/find",
+            "/service-availability/view",
+            "/view-response/response-time",
+            "/view-response/calculations",
+            "/view-response/request-number",
+            "/view-response/unavailable"
+    );
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         var requestId = request.getHeader(X_REQUEST_ID);
+
+        // Reject oversized payloads on reporting endpoints before deserialization
+        String uri = request.getRequestURI();
+        if (SIZE_LIMITED_ENDPOINTS.stream().anyMatch(uri::endsWith)) {
+            long contentLength = request.getContentLengthLong();
+            if (contentLength > MAX_PAYLOAD_BYTES) {
+                LOGGER.warn("Payload too large ({} bytes) for {}", contentLength, uri);
+                response.setStatus(413);
+                response.setContentType("application/json");
+                String body = "{\"type\":\"about:blank\",\"title\":\"Payload Too Large\",\"status\":413,\"errors\":[{\"code\":\"CONTENT_TOO_LARGE\"}]}";
+                response.setContentLength(body.getBytes(StandardCharsets.UTF_8).length);
+                response.getWriter().write(body);
+                return;
+            }
+        }
 
         var cachedRequest = new ContentCachingRequestWrapper(request);
         var cachedResponse = new ContentCachingResponseWrapper(response);
         filterChain.doFilter(cachedRequest, cachedResponse);
 
         if (requestId == null || ObjectUtils.isEmpty(requestId)) {
-            var uri = request.getRequestURI();
+            var logUri = request.getRequestURI();
             var endpoints = List.of("/token", "/rreguri", "/introspect", "/perm","/jwk_uri");
-            if (endpoints.stream().anyMatch(uri::contains)) {
+            if (endpoints.stream().anyMatch(logUri::contains)) {
                 LOGGER.debug("Not logging request and response due to x-request-id being null or empty for: {} ", request.getRequestURI());
             }
         } else if (LOGGER.isInfoEnabled()) {
@@ -100,7 +126,7 @@ public class HttpLoggerFilter extends OncePerRequestFilter {
         // note - below we check if requestParams for form data - won't parse as json and we get an unnecessary exception (e.g. introspect endpoint)
         if (requestParams.isEmpty() && !requestContent.isEmpty()) {
             try {
-                Map<String, Object> myRequestBody = jsonMapper.readValue(requestContent, Map.class);
+                Map<String, Object> myRequestBody = jsonMapper.readValue(requestContent, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
                 httpLogDto.requestBodyParameters(myRequestBody);
             } catch (IOException e) {
                 LOGGER.error("Error parsing request body", e);
@@ -119,7 +145,7 @@ public class HttpLoggerFilter extends OncePerRequestFilter {
         // get content as string or json map
         var responseBody = new String(content, cachedResponse.getCharacterEncoding());
         if (contentType != null && contentType.contains("application/json") && cachedResponse.getStatus() >= 200 && cachedResponse.getStatus() < 300) {
-            Map<String, String> responseJson = jsonMapper.readValue(responseBody, Map.class);
+            Map<String, Object> responseJson = jsonMapper.readValue(responseBody, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
             httpLogDto.responseJson(responseJson);
         } else {
             httpLogDto.responseText(responseBody);
