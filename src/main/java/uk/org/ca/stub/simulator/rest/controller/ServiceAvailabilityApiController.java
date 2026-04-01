@@ -2,6 +2,7 @@ package uk.org.ca.stub.simulator.rest.controller;
 
 import java.net.URI;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -137,7 +138,7 @@ public class ServiceAvailabilityApiController implements ServiceAvailabilityApi 
             java.util.regex.Pattern.compile("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[+-]\\d{2}:\\d{2})$");
 
     private static final java.util.regex.Pattern UNAVAIL_REASON_PATTERN =
-            java.util.regex.Pattern.compile("^[a-zA-Z0-9_ .]*$");
+            java.util.regex.Pattern.compile("^[a-zA-Z0-9_ .-]*$");
 
     private ResponseEntity<DefaultResponse> checkFieldFormats(Object rawRequest) {
         if (!(rawRequest instanceof java.util.Map<?, ?> map)) return null;
@@ -322,7 +323,7 @@ public class ServiceAvailabilityApiController implements ServiceAvailabilityApi 
         // Normal response
         DefaultResponse response = new DefaultResponse();
         response.setMessage("ACCEPTED");
-        response.setDatetimestamp(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS));
+        response.setDatetimestamp(OffsetDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MILLIS));
         
         return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
     }
@@ -332,7 +333,7 @@ public class ServiceAvailabilityApiController implements ServiceAvailabilityApi 
         problemDetails.setType(ABOUT_BLANK);
         problemDetails.setTitle("Bad Request");
         problemDetails.setStatus(400);
-        problemDetails.setDatetimestamp(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS));
+        problemDetails.setDatetimestamp(OffsetDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MILLIS));
         
         List<ProblemDetailsErrorsInner> errors = new ArrayList<>();
         for (ConstraintViolation<T> violation : violations) {
@@ -359,7 +360,7 @@ public class ServiceAvailabilityApiController implements ServiceAvailabilityApi 
                 problemDetails.setType(ABOUT_BLANK);
                 problemDetails.setTitle("Payload Too Large");
                 problemDetails.setStatus(413);
-                problemDetails.setDatetimestamp(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS));
+                problemDetails.setDatetimestamp(OffsetDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MILLIS));
                 ProblemDetailsErrorsInner error = new ProblemDetailsErrorsInner();
                 error.setCode("CONTENT_TOO_LARGE");
                 problemDetails.setErrors(java.util.List.of(error));
@@ -436,7 +437,7 @@ public class ServiceAvailabilityApiController implements ServiceAvailabilityApi 
         problemDetails.setType(ABOUT_BLANK);
         problemDetails.setTitle("Bad Request");
         problemDetails.setStatus(400);
-        problemDetails.setDatetimestamp(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS));
+        problemDetails.setDatetimestamp(OffsetDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MILLIS));
 
         String fieldNameUpper = fieldName.replaceAll("([a-z])([A-Z])", "$1_$2").toUpperCase();
         String errorCode = "INVALID_" + fieldNameUpper;
@@ -478,7 +479,7 @@ public class ServiceAvailabilityApiController implements ServiceAvailabilityApi 
         problemDetails.setType(URI.create("https://example.com/errors/" + config.getCode()));
         problemDetails.setTitle(toTitle(config.getCode()));
         problemDetails.setStatus(config.getStatus());
-        problemDetails.setDatetimestamp(OffsetDateTime.now());
+        problemDetails.setDatetimestamp(OffsetDateTime.now(ZoneOffset.UTC));
         
         // Convert stub configuration errors to problem details errors
         List<ProblemDetailsErrorsInner> errors = config.getErrors().stream()

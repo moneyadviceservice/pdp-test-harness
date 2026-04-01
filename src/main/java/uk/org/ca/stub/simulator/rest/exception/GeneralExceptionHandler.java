@@ -2,6 +2,7 @@ package uk.org.ca.stub.simulator.rest.exception;
 
 import java.net.URI;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
@@ -45,7 +46,7 @@ public class GeneralExceptionHandler {
         problemDetails.setType(ABOUT_BLANK);
         problemDetails.setTitle("Method Not Allowed");
         problemDetails.setStatus(405);
-        problemDetails.setDatetimestamp(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS));
+        problemDetails.setDatetimestamp(OffsetDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MILLIS));
         ProblemDetailsErrorsInner error = new ProblemDetailsErrorsInner();
         error.setCode("METHOD_NOT_ALLOWED");
         problemDetails.setErrors(List.of(error));
@@ -59,7 +60,7 @@ public class GeneralExceptionHandler {
         problemDetails.setType(ABOUT_BLANK);
         problemDetails.setTitle("Bad Request");
         problemDetails.setStatus(400);
-        problemDetails.setDatetimestamp(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS));
+        problemDetails.setDatetimestamp(OffsetDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MILLIS));
         ProblemDetailsErrorsInner error = new ProblemDetailsErrorsInner();
         // Normalise to UPPER_SNAKE_CASE: handle both "xRequestID" (camelCase) and "X-Request-ID" (header name)
         String paramName = ex.getName();
@@ -79,7 +80,7 @@ public class GeneralExceptionHandler {
         problemDetails.setType(ABOUT_BLANK);
         problemDetails.setTitle("Bad Request");
         problemDetails.setStatus(400);
-        problemDetails.setDatetimestamp(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS));
+        problemDetails.setDatetimestamp(OffsetDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MILLIS));
         ProblemDetailsErrorsInner error = new ProblemDetailsErrorsInner();
         error.setCode("INVALID_REQUEST_BODY");
         problemDetails.setErrors(List.of(error));
@@ -93,7 +94,7 @@ public class GeneralExceptionHandler {
         problemDetails.setType(ABOUT_BLANK);
         problemDetails.setTitle("Payload Too Large");
         problemDetails.setStatus(413);
-        problemDetails.setDatetimestamp(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS));
+        problemDetails.setDatetimestamp(OffsetDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MILLIS));
         ProblemDetailsErrorsInner error = new ProblemDetailsErrorsInner();
         error.setCode("CONTENT_TOO_LARGE");
         problemDetails.setErrors(List.of(error));

@@ -2,6 +2,7 @@ package uk.org.ca.stub.simulator.rest.controller;
 
 import java.net.URI;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -107,7 +108,7 @@ public class ViewResponseApiController implements ViewResponseApi {
         // Normal response
         DefaultResponse response = new DefaultResponse();
         response.setMessage(MSG_ACCEPTED);
-        response.setDatetimestamp(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS));
+        response.setDatetimestamp(OffsetDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MILLIS));
         
         return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
     }
@@ -117,7 +118,7 @@ public class ViewResponseApiController implements ViewResponseApi {
         problemDetails.setType(ABOUT_BLANK);
         problemDetails.setTitle("Bad Request");
         problemDetails.setStatus(400);
-        problemDetails.setDatetimestamp(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS));
+        problemDetails.setDatetimestamp(OffsetDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MILLIS));
         
         List<ProblemDetailsErrorsInner> errors = new ArrayList<>();
         for (ConstraintViolation<T> violation : violations) {
@@ -140,7 +141,7 @@ public class ViewResponseApiController implements ViewResponseApi {
         problemDetails.setType(ABOUT_BLANK);
         problemDetails.setTitle("Bad Request");
         problemDetails.setStatus(400);
-        problemDetails.setDatetimestamp(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS));
+        problemDetails.setDatetimestamp(OffsetDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MILLIS));
         
         ProblemDetailsErrorsInner error = new ProblemDetailsErrorsInner();
         // Convert camelCase to UPPER_SNAKE_CASE with spec exceptions
@@ -507,7 +508,7 @@ private ResponseEntity<DefaultResponse> createPayloadTooLargeResponse() {
         problemDetails.setType(ABOUT_BLANK);
         problemDetails.setTitle("Payload Too Large");
         problemDetails.setStatus(413);
-        problemDetails.setDatetimestamp(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS));
+        problemDetails.setDatetimestamp(OffsetDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MILLIS));
         ProblemDetailsErrorsInner error = new ProblemDetailsErrorsInner();
         error.setCode("CONTENT_TOO_LARGE");
         problemDetails.setErrors(List.of(error));
@@ -559,7 +560,7 @@ private ResponseEntity<DefaultResponse> createPayloadTooLargeResponse() {
             if (config != null) return createErrorResponse(config);
             DefaultResponse response = new DefaultResponse();
             response.setMessage(MSG_ACCEPTED);
-            response.setDatetimestamp(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS));
+            response.setDatetimestamp(OffsetDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MILLIS));
             return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
         }
         ViewResponseResponseTimesData request;
@@ -671,7 +672,7 @@ private ResponseEntity<DefaultResponse> createPayloadTooLargeResponse() {
         }
         DefaultResponse response = new DefaultResponse();
         response.setMessage(MSG_ACCEPTED);
-        response.setDatetimestamp(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS));
+        response.setDatetimestamp(OffsetDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MILLIS));
         return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
     }
 
@@ -705,7 +706,7 @@ private ResponseEntity<DefaultResponse> createPayloadTooLargeResponse() {
         problemDetails.setType(URI.create("https://example.com/errors/" + config.getCode()));
         problemDetails.setTitle(toTitle(config.getCode()));
         problemDetails.setStatus(config.getStatus());
-        problemDetails.setDatetimestamp(OffsetDateTime.now());
+        problemDetails.setDatetimestamp(OffsetDateTime.now(ZoneOffset.UTC));
         
         // Convert stub configuration errors to problem details errors
         List<ProblemDetailsErrorsInner> errors = config.getErrors().stream()
