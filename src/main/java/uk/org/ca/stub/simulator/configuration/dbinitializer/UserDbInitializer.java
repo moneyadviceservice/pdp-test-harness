@@ -1,9 +1,13 @@
 package uk.org.ca.stub.simulator.configuration.dbinitializer;
 
-import jakarta.annotation.PostConstruct;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import uk.org.ca.stub.simulator.entity.User;
 import uk.org.ca.stub.simulator.repository.UserRepository;
 
@@ -16,16 +20,16 @@ public class UserDbInitializer {
     private static final Logger logger = LoggerFactory.getLogger(UserDbInitializer.class);
 
     private final UserRepository userRepository;
+    
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public UserDbInitializer(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
-    public static final List<User> users;
-
-    static {
-
-        users = List.of(
+    private static List<User> createDefaultUsers() {
+        return List.of(
                 User.builder()
                         .friendlyName("Valid UAT and PAT")
                         .pat(NOT_EXPIRED_TOKEN_PAT)
@@ -289,14 +293,20 @@ public class UserDbInitializer {
         );
     }
 
-    @PostConstruct
+    public static List<User> getDefaultUsers() {
+        return createDefaultUsers();
+    }
+
+    @EventListener(ApplicationReadyEvent.class)
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public void init() {
         if (userRepository.count() > 0) {
             logger.debug("Initializer did not add users to the database, since some already exist!");
             return;
         }
+        List<User> users = createDefaultUsers();
         logger.debug("Adding {} users to the database", users.size());
-        userRepository.saveAll(users);
+        users.forEach(entityManager::persist);
     }
 
 }

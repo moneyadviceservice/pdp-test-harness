@@ -1,0 +1,2031 @@
+openapi: 3.0.0
+info:
+  title: Reporting API
+  version: '2.1'
+  description: |
+    The Reporting API for the reporting service of the Money and Pensions Service (MaPS). It is hosted by the CDA.
+    This API allows pension providers and schemes to report various performance metrics and service availability data.
+    For more details, please refer to the [Reporting Technical Standards](https://www.pensionsdashboardsprogramme.org.uk/standards/reporting-standards).
+servers:
+- description: SwaggerHub API Auto Mocking
+  url: https://virtserver.swaggerhub.com/PensionsDashboard/reporting-api/2.1
+- description: Local server
+  url: https://localhost:8080
+
+tags:
+- name: view-response
+  description: |
+    View response performance metrics including request volumes, response times,
+    calculation durations, and unavailability scenarios
+- name: service-availability
+  description: |
+    Service availability monitoring for both find and view services,
+    tracking planned and unplanned downtime with precise timestamps
+
+components:
+  schemas:
+    HoldernameGuidDefinition:
+      type: object
+      required:
+      - holdernameGuid
+      properties:
+        holdernameGuid:
+          type: string
+          format: uuid
+          description: |
+            HoldernameGuid unique identifier associated with one or more parts of regulated pension providers or schemes. 
+            see [Link](https://www.pensionsdashboardsprogramme.org.uk/standards/technical-standards) for details 
+          example: "816f82b5-8e4f-407b-8c54-afb179c4af5a"
+
+    SubmissionIdDefinition:
+      type: object
+      required:
+      - submission_id
+      properties:
+        submission_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: |
+            The submission id is a unique identifier for the batch of records as part of the same 
+            data being reported.Submission_id must always be populated for all records. 
+            When submission_reason is "null submission" and for any individual record not submitted as part of a batch, submission_id should be null.
+          example: "b955b911-838c-4179-bd2f-089630c61a9d"
+
+    GeneralReportingProperties:
+      type: object
+      required:
+      - record_id
+      - submission_status
+      - reporting_period_start
+      properties:
+        record_id:
+          type: string
+          format: uuid
+          description: |
+            The record_id is a unique identifier for the record for which data is being reported.
+            This must be a valid UUID v4 format and is required for all reporting operations.
+          example: "3eac3a8b-fbdc-4897-b3ea-908a6b411d7f"
+        submission_status:
+          type: string
+          minLength: 1
+          maxLength: 255
+          enum:
+          - "on time"
+          - "correction"
+          - "late"
+          description: |
+            This is the status for this data upload/submission via the reporting api.
+          example: "correction"
+        reporting_period_start:
+          type: string
+          format: date-time
+          description: |
+            Reporting period start for which data was uploaded/submitted via api.
+            For more Details see [rfc3339](https://www.rfc-editor.org/rfc/rfc3339#section-5.8)
+          example: "2025-03-19T00:00:00.000Z"
+
+    SubmissionReasonNullIncluded:
+      type: object
+      required:
+      - submission_reason
+      properties:
+        submission_reason:
+          type: string
+          minLength: 1
+          maxLength: 255
+          enum:
+          - "initial submission"
+          - "resubmission"
+          - "null submission"
+          description: |
+            List the reason for this data upload/submission via api
+          example: "initial submission"
+
+    SubmissionReasonNullNotIncluded:
+      type: object
+      required:
+      - submission_reason
+      properties:
+        submission_reason:
+          type: string
+          minLength: 1
+          maxLength: 255
+          enum:
+          - "initial submission"
+          - "resubmission"
+          description: |
+            List the reason for this data upload/submission via api. Null submission is not included in this schema.
+          example: "initial submission"
+
+    GenericReportingProperties:
+      allOf:
+      - $ref: "#/components/schemas/GeneralReportingProperties"
+      - $ref: "#/components/schemas/SubmissionReasonNullIncluded"
+
+    GenericReportingPropertiesWithoutNull:
+      allOf:
+      - $ref: "#/components/schemas/GeneralReportingProperties"
+      - $ref: "#/components/schemas/SubmissionReasonNullNotIncluded"
+
+    NullSubmissionData:
+      allOf:
+      - $ref: "#/components/schemas/HoldernameGuidDefinition"
+      - $ref: '#/components/schemas/SubmissionIdDefinition'
+      - $ref: '#/components/schemas/GenericReportingProperties'
+
+    NullSubmissionMultipleHolders:
+      allOf:
+      - $ref: '#/components/schemas/SubmissionIdDefinition'
+      - $ref: '#/components/schemas/GeneralReportingProperties'
+      - $ref: '#/components/schemas/SubmissionReasonNullIncluded'
+      - type: object
+        required:
+        - items
+        properties:
+          items:
+            type: array
+            minItems: 1
+            maxItems: 667
+            description: Array of holdernameGuid values for null submission
+            items:
+              type: string
+              format: uuid
+              description: Holder GUID for which no data is available
+              example: "816f82b5-8e4f-407b-8c54-afb179c4af5a"
+
+    ServiceUnavailabilityData:
+      type: object
+      required:
+      - start_date_ts
+      - end_date_ts
+      - unavail_scheduled
+      - unavail_reason
+      properties:
+        start_date_ts:
+          type: string
+          format: date-time
+          maxLength: 255
+          description: |
+            Must report per pension provider or scheme, per calendar month the
+            start date and time of each instance of find service unavailability. 
+            For more Details see [rfc3339](https://www.rfc-editor.org/rfc/rfc3339#section-5.8)
+          example: "2021-11-25T00:00:00.000Z"
+
+        end_date_ts:
+          type: string
+          format: date-time
+          maxLength: 255
+          description: |
+            Must report per pension provider or scheme, per calendar month the 
+            end date and time of each instance of find service unavailability. 
+            For more Details see [rfc3339](https://www.rfc-editor.org/rfc/rfc3339#section-5.8)
+          example: "2021-11-25T00:00:00.000Z"
+
+        unavail_scheduled:
+          type: boolean
+          description: |
+            - false: 0-> Unplanned unavailability. 
+            - true: 1-> Planned unavailability. 
+          example: true
+
+        unavail_reason:
+          type: string
+          minLength: 1
+          maxLength: 255
+          pattern: '^[a-zA-Z0-9_ .-]*$'
+          description: |
+            Must report reason for unavailability. 
+          example: "Downtime for system update"
+
+    HolderNameUnavailabilityMap:
+      type: object
+      description: |
+        A map where each key is a holdernameGuid and the value is an array of service unavailability data for that holdername.
+      additionalProperties:
+        type: array
+        minItems: 1
+        maxItems: 100
+        items:
+          $ref: '#/components/schemas/ServiceUnavailabilityData'
+      example:
+        "816f82b5-8e4f-407b-8c54-afb179c4af5a":
+        - unavail_scheduled: true
+          unavail_reason: "Downtime for system update"
+          start_date_ts: "2024-11-25T00:00:00.000Z"
+          end_date_ts: "2024-11-25T14:24:01.248Z"
+        - unavail_scheduled: true
+          unavail_reason: "Downtime for system update"
+          start_date_ts: "2024-11-25T00:00:00.000Z"
+          end_date_ts: "2024-11-25T14:24:01.248Z"
+        "816f82b5-8e4f-407b-8c54-afb179c4af5c":
+        - unavail_scheduled: true
+          unavail_reason: "Downtime for system update"
+          start_date_ts: "2024-11-25T00:00:00.000Z"
+          end_date_ts: "2024-11-25T14:24:01.248Z"
+
+    DefaultResponse:
+      type: object
+      additionalProperties: false
+      required:
+      - message
+      - datetimestamp
+      properties:
+        message:
+          type: string
+          minLength: 1
+          maxLength: 255
+          pattern: '^[a-zA-Z0-9_]*$'
+          description: message for the response
+          example: "ACCEPTED"
+        datetimestamp:
+          type: string
+          format: date-time
+          description: |
+            Reporting data submission time stamp.
+            For more Details see [rfc3339](https://www.rfc-editor.org/rfc/rfc3339#section-5.8)
+          example: "2021-11-25T00:00:00.000Z"
+
+    RequestDetails:
+      type: object
+      additionalProperties: false
+      required:
+      - req_date_ts
+      - resp_date_ts
+      properties:
+        req_date_ts:
+          type: string
+          format: date-time
+          description: |
+            The date and time of the view request for each view response that exceeds 10 seconds per pension provider or scheme.
+            For more Details see [rfc3339](https://www.rfc-editor.org/rfc/rfc3339#section-5.8)
+          example: "2021-11-25T00:00:00.000Z"
+        resp_date_ts:
+          type: string
+          format: date-time
+          description: |
+            The date and time of the view request for each view response that exceeds 10 seconds per pension provider or scheme.
+            For more Details see [rfc3339](https://www.rfc-editor.org/rfc/rfc3339#section-5.8)
+          example: "2021-11-25T00:00:00.000Z"
+
+    RequestNumber:
+      type: object
+      required:
+      - req_count
+      properties:
+        req_count:
+          type: integer
+          format: int32
+          minimum: 0
+          description: The number of view requests received per pension provider or scheme.
+          example: 100
+
+    ResponseTimes:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          minItems: 1
+          maxItems: 1400
+          items:
+            $ref: '#/components/schemas/RequestDetails'
+
+    AccruedUnavailableData:
+      type: object
+      required:
+      - accrued_unavail_ano_count
+      - accrued_unavail_ppf_count
+      - accrued_unavail_trn_count
+      properties:
+        accrued_unavail_ano_count:
+          type: integer
+          format: int32
+          minimum: 0
+          description: |
+            Total count of returns of item 2.401 (accrued unavailable) as code ‘ANO’. 
+          example: 0
+        accrued_unavail_ppf_count:
+          type: integer
+          format: int32
+          minimum: 0
+          description: |
+            Total count of returns of item 2.401 (accrued unavailable) as code ‘PPF’.   
+          example: 0
+        accrued_unavail_trn_count:
+          type: integer
+          format: int32
+          minimum: 0
+          description: |
+            Total count of returns of item 2.401 (accrued unavailable) as code ‘TRN’.   
+          example: 0
+
+    BaseCalculationRequest:
+      allOf:
+      - $ref: "#/components/schemas/HoldernameGuidDefinition"
+      type: object
+      required:
+      - calculation_type
+      properties:
+        calculation_type:
+          type: string
+          minLength: 1
+          maxLength: 255
+          enum:
+          - single
+          - multiple
+          description: |
+            Type of calculation for which data is reported for. 
+            which can be single or multiple.
+          example: "multiple"
+
+    CalculationObject:
+      type: object
+      additionalProperties: false
+      required:
+      - value_code
+      - calculation_start_date
+      - calculation_end_date
+      properties:
+        value_code:
+          type: string
+          minLength: 1
+          maxLength: 255
+          enum:
+          - DBC
+          - DCC
+          description: |
+            Must report per pension provider or scheme, each instance where at least one ERI value is not available for immediate return. For each instance: 
+            whether all the benefits for which calculations are required are DC or not (by reporting the unavailable code returned as per the data standards)
+            codes ‘[DBC’ and /’DCC’] for data standards 2.301/2.401.). 
+          example: DBC
+        calculation_start_date:
+          type: string
+          format: date-time
+          description: |
+            The calculation time (time taken for the data to be available for return).
+            This is expressed in date format consistent with ISO 8601:2004 date format.
+          example: "2021-11-15T00:00:00.000Z"
+        calculation_end_date:
+          type: string
+          format: date-time
+          description: |
+            The calculation time (time taken for the data to be available for return).
+            This is expressed in date format consistent with ISO 8601:2004 date format.
+          example: "2021-11-25T00:00:00.000Z"
+
+    CalculationDataArray:
+      type: object
+      additionalProperties: false
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          minItems: 0
+          maxItems: 1300
+          items:
+            $ref: '#/components/schemas/CalculationObject'
+
+    SingleCalculationData:
+      type: object
+      required:
+      - single_calculation
+      properties:
+        single_calculation:
+          $ref: '#/components/schemas/CalculationDataArray'
+
+    MultipleCalculationData:
+      type: object
+      required:
+      - multiple_calculation
+      properties:
+        multiple_calculation:
+          type: object
+          additionalProperties: false
+          required:
+          - eriCalculationData
+          - accruedCalculationData
+          properties:
+            eriCalculationData:
+              $ref: '#/components/schemas/CalculationDataArray'
+            accruedCalculationData:
+              $ref: '#/components/schemas/CalculationDataArray'
+
+    CalculationRequest:
+      allOf:
+      - $ref: '#/components/schemas/BaseCalculationRequest'
+      - $ref: '#/components/schemas/GeneralReportingProperties'
+      - $ref: '#/components/schemas/SubmissionReasonNullIncluded'
+      - $ref: '#/components/schemas/SubmissionIdDefinition'
+      - anyOf:
+        - $ref: '#/components/schemas/SingleCalculationData'
+        - $ref: '#/components/schemas/MultipleCalculationData'
+        discriminator:
+          propertyName: calculation_type
+          mapping:
+            single: '#/components/schemas/SingleCalculationData'
+            multiple: '#/components/schemas/MultipleCalculationData'
+
+    ViewResponseUnavailable:
+      type: object
+      required:
+      - contact_count
+      - missingadmin_count
+      - temperror_count
+      properties:
+        contact_count:
+          type: integer
+          format: int32
+          minimum: 0
+          description: |
+            Total count of returns of item 2.004 (contact pension provider or scheme) populated ‘true’. 
+            Code to indicate there has been a match but the user should contact the pension provider/scheme 
+            before it provides any or all the user’s pensions information.
+          example: 12
+        missingadmin_count:
+          type: integer
+          format: int32
+          minimum: 0
+          description: |
+            Total count of returns of item 2.005 (administrative details not available, new member case) populated ‘true’.   
+          example: 0
+        temperror_count:
+          type: integer
+          format: int32
+          minimum: 0
+          description: |
+            Total view responses item 2.006 (temporary system error) is populated 'true'.  
+            Code to explain to the user that some or all of the pensions information is not 
+            available due to a temporary system error and they should re-try shortly. 
+          example: 0
+
+    EriUnavailableData:
+      type: object
+      required:
+      - eri_unavail_ano_count
+      - eri_unavail_ppf_count
+      - eri_unavail_trn_count
+      properties:
+        eri_unavail_ano_count:
+          type: integer
+          format: int32
+          minimum: 0
+          description: |
+            Total count of returns of item 2.301 (ERI unavailable) as code ‘ANO’.  
+          example: 0
+
+        eri_unavail_ppf_count:
+          type: integer
+          format: int32
+          minimum: 0
+          description: |
+            Total count of returns of item 2.301 (ERI unavailable) as code ‘PPF’.   
+          example: 0
+
+        eri_unavail_trn_count:
+          type: integer
+          format: int32
+          minimum: 0
+          description: |
+            Total count of returns of item 2.301 (ERI unavailable) as code ‘TRN’.   
+          example: 0
+
+    NullSubmission:
+      $ref: '#/components/schemas/NullSubmissionData'
+
+    ServiceAvailabilityReportData:
+      description: |
+        Service availability report data for initial submission or resubmission.
+        For null submissions (no unavailability data to report), use NullSubmissionMultipleHolders instead.
+      allOf:
+      - $ref: '#/components/schemas/SubmissionIdDefinition'
+      - $ref: '#/components/schemas/GeneralReportingProperties'
+      - $ref: '#/components/schemas/SubmissionReasonNullNotIncluded'
+      - type: object
+        required:
+        - items
+        properties:
+          items:
+            type: array
+            minItems: 1
+            maxItems: 667
+            description: |
+              Array of holder unavailability data. Each item is a map where the key is a holdernameGuid
+              and the value is an array of unavailability periods for that holder.
+            items:
+              $ref: '#/components/schemas/HolderNameUnavailabilityMap'
+
+    ViewResponseRequestNumberData:
+      allOf:
+      - $ref: '#/components/schemas/HoldernameGuidDefinition'
+      - $ref: '#/components/schemas/SubmissionIdDefinition'
+      - $ref: '#/components/schemas/RequestNumber'
+      - $ref: '#/components/schemas/GeneralReportingProperties'
+      - $ref: '#/components/schemas/SubmissionReasonNullIncluded'
+
+    ViewResponseResponseTimesData:
+      allOf:
+      - $ref: '#/components/schemas/HoldernameGuidDefinition'
+      - $ref: '#/components/schemas/SubmissionIdDefinition'
+      - $ref: '#/components/schemas/GeneralReportingProperties'
+      - $ref: '#/components/schemas/SubmissionReasonNullIncluded'
+      - $ref: '#/components/schemas/ResponseTimes'
+
+    ViewResponseUnavailableRequest:
+      allOf:
+      - $ref: '#/components/schemas/HoldernameGuidDefinition'
+      - $ref: '#/components/schemas/SubmissionIdDefinition'
+      - $ref: '#/components/schemas/GenericReportingPropertiesWithoutNull'
+      - $ref: '#/components/schemas/ViewResponseUnavailable'
+      - $ref: '#/components/schemas/EriUnavailableData'
+      - $ref: '#/components/schemas/AccruedUnavailableData'
+
+    ProblemDetails:
+      type: object
+      required:
+      - type
+      - title
+      - status
+      - errors
+      description: |
+        A problem details object compliant with RFC 9457:
+        [Link](https://datatracker.ietf.org/doc/html/rfc9457)
+      additionalProperties: true
+      properties:
+        type:
+          type: string
+          format: uri
+          maxLength: 1024
+          description: |
+            A URI reference that identifies the problem type.
+            see [link](https://datatracker.ietf.org/doc/html/rfc9457#name-type) for details.
+          example: "https://example.com/probs/validation-error"
+        title:
+          type: string
+          maxLength: 1024
+          description: |
+            A short, human-readable summary of the problem type. 
+            see [link](https://datatracker.ietf.org/doc/html/rfc9457#name-title) for details.
+          example: 'Bad Request'
+        status:
+          type: integer
+          format: int32
+          minimum: 100
+          maximum: 599
+          description: |
+            The HTTP status code generated by the origin server for this error occurrence.
+            see [link](https://datatracker.ietf.org/doc/html/rfc9457#name-status) for details.
+          example: 400
+        datetimestamp:
+          type: string
+          format: date-time
+          maxLength: 250
+          description: |
+            ISO 8601 timestamp of when the error occurred. 
+          example: "2025-06-26T14:00:00Z"
+        as_uri:
+          type: string
+          format: uri
+          maxLength: 2048
+          description: |
+            A URI used in the context of an error and can provide additional information.
+          example: "https://cda.example.com/ig/pat-refresh"
+        errors:
+          type: array
+          maxItems: 1000
+          description: |
+            Detailed array of errors (extension). Each error item relates to a specific occurrence part of the set of errors 
+          items:
+            type: object
+            additionalProperties: false
+            required:
+            - code
+            properties:
+              code:
+                type: string
+                maxLength: 100
+                description: A machine-readable and human understandable code for this occurrence of the problem and defined by MaPS.
+                example: "INVALID_X_REQUEST_ID"
+
+  examples:
+    BadRequestXRequestIDExample:
+      value:
+        type: 'https://example.com/probs/bad-request'
+        title: "Bad Request"
+        status: 400
+        datetimestamp: '2025-07-15T00:00:00.000Z'
+        errors:
+        - code: "INVALID_X_REQUEST_ID"
+
+    BadRequestHoldernameGuidExample:
+      value:
+        type: 'https://example.com/probs/bad-request'
+        title: "Bad Request"
+        status: 400
+        datetimestamp: '2025-07-15T00:00:00.000Z'
+        errors:
+        - code: "INVALID_HOLDERNAMEGUID"
+
+    BadRequestRecordIdExample:
+      value:
+        type: 'https://example.com/probs/bad-request'
+        title: "Bad Request"
+        status: 400
+        datetimestamp: '2025-07-15T00:00:00.000Z'
+        errors:
+        - code: "INVALID_RECORD_ID"
+
+    BadRequestSubmissionIdExample:
+      value:
+        type: 'https://example.com/probs/bad-request'
+        title: "Bad Request"
+        status: 400
+        datetimestamp: '2025-07-15T00:00:00.000Z'
+        errors:
+        - code: "INVALID_SUBMISSION_ID"
+
+    BadRequestSubmissionReasonExample:
+      value:
+        type: 'https://example.com/probs/bad-request'
+        title: "Bad Request"
+        status: 400
+        datetimestamp: '2025-07-15T00:00:00.000Z'
+        errors:
+        - code: "INVALID_SUBMISSION_REASON"
+
+    BadRequestReportingPeriodStartExample:
+      value:
+        type: 'https://example.com/probs/bad-request'
+        title: "Bad Request"
+        status: 400
+        datetimestamp: '2025-07-15T00:00:00.000Z'
+        errors:
+        - code: "INVALID_REPORTING_PERIOD_START"
+
+    BadRequestUnavailScheduledExample:
+      value:
+        type: 'https://example.com/probs/bad-request'
+        title: "Bad Request"
+        status: 400
+        datetimestamp: '2025-07-15T00:00:00.000Z'
+        errors:
+        - code: "INVALID_UNAVAIL_SCHEDULED"
+
+    BadRequestUnavailReasonExample:
+      value:
+        type: 'https://example.com/probs/bad-request'
+        title: "Bad Request"
+        status: 400
+        datetimestamp: '2025-07-15T00:00:00.000Z'
+        errors:
+        - code: "INVALID_UNAVAIL_REASON"
+
+    BadRequestInvalidStartDateExample:
+      value:
+        type: 'https://example.com/probs/bad-request'
+        title: "Bad Request"
+        status: 400
+        datetimestamp: '2025-07-15T00:00:00.000Z'
+        errors:
+        - code: "INVALID_START_DATE_TS"
+
+    BadRequestInvalidEndDateExample:
+      value:
+        type: 'https://example.com/probs/bad-request'
+        title: "Bad Request"
+        status: 400
+        datetimestamp: '2025-07-15T00:00:00.000Z'
+        errors:
+        - code: "INVALID_END_DATE_TS"
+
+    BadRequestReqCountExample:
+      value:
+        type: 'https://example.com/probs/bad-request'
+        title: "Bad Request"
+        status: 400
+        datetimestamp: '2025-07-15T00:00:00.000Z'
+        errors:
+        - code: "INVALID_REQ_COUNT"
+
+    BadRequestReqDateTsExample:
+      value:
+        type: 'https://example.com/probs/bad-request'
+        title: "Bad Request"
+        status: 400
+        datetimestamp: '2025-07-15T00:00:00.000Z'
+        errors:
+        - code: "INVALID_REQ_DATE_TS"
+
+    BadRequestRespDateTsExample:
+      value:
+        type: 'https://example.com/probs/bad-request'
+        title: "Bad Request"
+        status: 400
+        datetimestamp: '2025-07-15T00:00:00.000Z'
+        errors:
+        - code: "INVALID_RESP_DATE_TS"
+
+    BadRequestCalculationTypeExample:
+      value:
+        type: 'https://example.com/probs/bad-request'
+        title: "Bad Request"
+        status: 400
+        datetimestamp: '2025-07-15T00:00:00.000Z'
+        errors:
+        - code: "INVALID_CALCULATION_TYPE"
+
+    BadRequestValueCodeExample:
+      value:
+        type: 'https://example.com/probs/bad-request'
+        title: "Bad Request"
+        status: 400
+        datetimestamp: '2025-07-15T00:00:00.000Z'
+        errors:
+        - code: "INVALID_VALUE_CODE"
+
+    BadRequestCalculationStartDateExample:
+      value:
+        type: 'https://example.com/probs/bad-request'
+        title: "Bad Request"
+        status: 400
+        datetimestamp: '2025-07-15T00:00:00.000Z'
+        errors:
+        - code: "INVALID_CALCULATION_START_DATE"
+
+    BadRequestCalculationEndDateExample:
+      value:
+        type: 'https://example.com/probs/bad-request'
+        title: "Bad Request"
+        status: 400
+        datetimestamp: '2025-07-15T00:00:00.000Z'
+        errors:
+        - code: "INVALID_CALCULATION_END_DATE"
+
+    BadRequestContactCountExample:
+      value:
+        type: 'https://example.com/probs/bad-request'
+        title: "Bad Request"
+        status: 400
+        datetimestamp: '2025-07-15T00:00:00.000Z'
+        errors:
+        - code: "INVALID_CONTACT_COUNT"
+
+    BadRequestMissingAdminCountExample:
+      value:
+        type: 'https://example.com/probs/bad-request'
+        title: "Bad Request"
+        status: 400
+        datetimestamp: '2025-07-15T00:00:00.000Z'
+        errors:
+        - code: "INVALID_MISSINGADMIN_COUNT"
+
+    BadRequestTempErrorCountExample:
+      value:
+        type: 'https://example.com/probs/bad-request'
+        title: "Bad Request"
+        status: 400
+        datetimestamp: '2025-07-15T00:00:00.000Z'
+        errors:
+        - code: "INVALID_TEMPERROR_COUNT"
+
+    BadRequestEriUnavailPpfCountExample:
+      value:
+        type: 'https://example.com/probs/bad-request'
+        title: "Bad Request"
+        status: 400
+        datetimestamp: '2025-07-15T00:00:00.000Z'
+        errors:
+        - code: "INVALID_ERI_UNAVAIL_PPF_COUNT"
+
+    BadRequestEriUnavailAnoCountExample:
+      value:
+        type: 'https://example.com/probs/bad-request'
+        title: "Bad Request"
+        status: 400
+        datetimestamp: '2025-07-15T00:00:00.000Z'
+        errors:
+        - code: "INVALID_ERI_UNAVAIL_ANO_COUNT"
+
+    BadRequestEriUnavailTrnCountExample:
+      value:
+        type: 'https://example.com/probs/bad-request'
+        title: "Bad Request"
+        status: 400
+        datetimestamp: '2025-07-15T00:00:00.000Z'
+        errors:
+        - code: "INVALID_ERI_UNAVAIL_TRN_COUNT"
+
+    BadRequestAccruedUnavailAnoCountExample:
+      value:
+        type: 'https://example.com/probs/bad-request'
+        title: "Bad Request"
+        status: 400
+        datetimestamp: '2025-07-15T00:00:00.000Z'
+        errors:
+        - code: "INVALID_ACCRUED_UNAVAIL_ANO_COUNT"
+
+    BadRequestUnavailPpfCountExample:
+      value:
+        type: 'https://example.com/probs/bad-request'
+        title: "Bad Request"
+        status: 400
+        datetimestamp: '2025-07-15T00:00:00.000Z'
+        errors:
+        - code: "INVALID_UNAVAIL_PPF_COUNT"
+
+    BadRequestAccruedUnavailTrnCountExample:
+      value:
+        type: 'https://example.com/probs/bad-request'
+        title: "Bad Request"
+        status: 400
+        datetimestamp: '2025-07-15T00:00:00.000Z'
+        errors:
+        - code: "INVALID_ACCRUED_UNAVAIL_TRN_COUNT"
+
+  parameters:
+    X-Request-ID:
+      name: X-Request-ID
+      in: header
+      description: A unique correlation id
+      required: true
+      schema:
+        type: string
+        format: uuid
+        example: 35cfcfb0-d98d-451f-83f1-e59933078555
+
+  responses:
+    ServiceAvailabilityBadRequestError:
+      description: Bad request - any of the following error codes may be present in the response
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            BadRequestXRequestIDExample:
+              $ref: '#/components/examples/BadRequestXRequestIDExample'
+            BadRequestHoldernameGuidExample:
+              $ref: '#/components/examples/BadRequestHoldernameGuidExample'
+            BadRequestRecordIdExample:
+              $ref: '#/components/examples/BadRequestRecordIdExample'
+            BadRequestSubmissionReasonExample:
+              $ref: '#/components/examples/BadRequestSubmissionReasonExample'
+            BadRequestReportingPeriodStartExample:
+              $ref: '#/components/examples/BadRequestReportingPeriodStartExample'
+            BadRequestUnavailScheduledExample:
+              $ref: '#/components/examples/BadRequestUnavailScheduledExample'
+            BadRequestUnavailReasonExample:
+              $ref: '#/components/examples/BadRequestUnavailReasonExample'
+            BadRequestInvalidStartDateExample:
+              $ref: '#/components/examples/BadRequestInvalidStartDateExample'
+            BadRequestInvalidEndDateExample:
+              $ref: '#/components/examples/BadRequestInvalidEndDateExample'
+
+    ViewResponseRequestNumberBadRequestError:
+      description: Bad request - any of the following error codes may be present in the response
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            BadRequestXRequestIDExample:
+              $ref: '#/components/examples/BadRequestXRequestIDExample'
+            BadRequestHoldernameGuidExample:
+              $ref: '#/components/examples/BadRequestHoldernameGuidExample'
+            BadRequestRecordIdExample:
+              $ref: '#/components/examples/BadRequestRecordIdExample'
+            BadRequestSubmissionReasonExample:
+              $ref: '#/components/examples/BadRequestSubmissionReasonExample'
+            BadRequestReportingPeriodStartExample:
+              $ref: '#/components/examples/BadRequestReportingPeriodStartExample'
+            BadRequestReqCountExample:
+              $ref: '#/components/examples/BadRequestReqCountExample'
+
+    ViewResponseResponseTimeBadRequestError:
+      description: Bad request - any of the following error codes may be present in the response
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            BadRequestXRequestIDExample:
+              $ref: '#/components/examples/BadRequestXRequestIDExample'
+            BadRequestHoldernameGuidExample:
+              $ref: '#/components/examples/BadRequestHoldernameGuidExample'
+            BadRequestRecordIdExample:
+              $ref: '#/components/examples/BadRequestRecordIdExample'
+            BadRequestSubmissionIdExample:
+              $ref: '#/components/examples/BadRequestSubmissionIdExample'
+            BadRequestSubmissionReasonExample:
+              $ref: '#/components/examples/BadRequestSubmissionReasonExample'
+            BadRequestReportingPeriodStartExample:
+              $ref: '#/components/examples/BadRequestReportingPeriodStartExample'
+            BadRequestReqDateTsExample:
+              $ref: '#/components/examples/BadRequestReqDateTsExample'
+            BadRequestRespDateTsExample:
+              $ref: '#/components/examples/BadRequestRespDateTsExample'
+
+    ViewResponseCalculationsBadRequestError:
+      description: Bad request - any of the following error codes may be present in the response
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            BadRequestXRequestIDExample:
+              $ref: '#/components/examples/BadRequestXRequestIDExample'
+            BadRequestHoldernameGuidExample:
+              $ref: '#/components/examples/BadRequestHoldernameGuidExample'
+            BadRequestRecordIdExample:
+              $ref: '#/components/examples/BadRequestRecordIdExample'
+            BadRequestSubmissionIdExample:
+              $ref: '#/components/examples/BadRequestSubmissionIdExample'
+            BadRequestSubmissionReasonExample:
+              $ref: '#/components/examples/BadRequestSubmissionReasonExample'
+            BadRequestReportingPeriodStartExample:
+              $ref: '#/components/examples/BadRequestReportingPeriodStartExample'
+            BadRequestCalculationTypeExample:
+              $ref: '#/components/examples/BadRequestCalculationTypeExample'
+            BadRequestValueCodeExample:
+              $ref: '#/components/examples/BadRequestValueCodeExample'
+            BadRequestCalculationStartDateExample:
+              $ref: '#/components/examples/BadRequestCalculationStartDateExample'
+            BadRequestCalculationEndDateExample:
+              $ref: '#/components/examples/BadRequestCalculationEndDateExample'
+
+    ViewResponseUnavailableBadRequestError:
+      description: Bad request - any of the following error codes may be present in the response
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            BadRequestXRequestIDExample:
+              $ref: '#/components/examples/BadRequestXRequestIDExample'
+            BadRequestHoldernameGuidExample:
+              $ref: '#/components/examples/BadRequestHoldernameGuidExample'
+            BadRequestRecordIdExample:
+              $ref: '#/components/examples/BadRequestRecordIdExample'
+            BadRequestSubmissionIdExample:
+              $ref: '#/components/examples/BadRequestSubmissionIdExample'
+            BadRequestSubmissionReasonExample:
+              $ref: '#/components/examples/BadRequestSubmissionReasonExample'
+            BadRequestReportingPeriodStartExample:
+              $ref: '#/components/examples/BadRequestReportingPeriodStartExample'
+            BadRequestContactCountExample:
+              $ref: '#/components/examples/BadRequestContactCountExample'
+            BadRequestMissingAdminCountExample:
+              $ref: '#/components/examples/BadRequestMissingAdminCountExample'
+            BadRequestTempErrorCountExample:
+              $ref: '#/components/examples/BadRequestTempErrorCountExample'
+            BadRequestEriUnavailPpfCountExample:
+              $ref: '#/components/examples/BadRequestEriUnavailPpfCountExample'
+            BadRequestEriUnavailAnoCountExample:
+              $ref: '#/components/examples/BadRequestEriUnavailAnoCountExample'
+            BadRequestEriUnavailTrnCountExample:
+              $ref: '#/components/examples/BadRequestEriUnavailTrnCountExample'
+            BadRequestAccruedUnavailAnoCountExample:
+              $ref: '#/components/examples/BadRequestAccruedUnavailAnoCountExample'
+            BadRequestUnavailPpfCountExample:
+              $ref: '#/components/examples/BadRequestUnavailPpfCountExample'
+            BadRequestAccruedUnavailTrnCountExample:
+              $ref: '#/components/examples/BadRequestAccruedUnavailTrnCountExample'
+
+    NotFoundError:
+      description: Not Found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            NotFound Example:
+              value:
+                type: 'https://example.com/probs/not-found'
+                title: "Not Found"
+                status: 404
+                datetimestamp: '2025-07-15T00:00:00.000Z'
+                errors:
+                - code: "INVALID_URL"
+
+    ForbiddenError:
+      description: Forbidden
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            Forbidden Example:
+              value:
+                type: 'https://example.com/probs/forbidden'
+                title: "Forbidden"
+                status: 403
+                datetimestamp: '2025-07-15T00:00:00.000Z'
+                errors:
+                - code: "FORBIDDEN"
+
+    MethodNotAllowedError:
+      description: Method Not Allowed
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            Method Not Allowed Example:
+              value:
+                type: 'https://example.com/probs/method-not-allowed'
+                title: "Method Not Allowed"
+                status: 405
+                datetimestamp: '2025-07-15T00:00:00.000Z'
+                errors:
+                - code: "METHOD_NOT_ALLOWED"
+
+    UnsupportedMediaTypeError:
+      description: Unsupported Media Type error
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            Unsupported Media Type Example:
+              value:
+                type: 'https://example.com/probs/unsupported-media-type'
+                title: "Unsupported Media Type"
+                status: 415
+                datetimestamp: '2025-07-15T00:00:00.000Z'
+                errors:
+                - code: "INVALID_CONTENT_TYPE"
+
+    ContentTooLargeError:
+      description: Content Too Large error
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            Content Too Large Example:
+              value:
+                type: 'https://example.com/probs/content-too-large'
+                title: "Content Too Large"
+                status: 413
+                datetimestamp: '2025-07-15T00:00:00.000Z'
+                errors:
+                - code: "CONTENT_TOO_LARGE"
+
+    TooManyRequestsError:
+      description: |
+        Too Many Requests error - Rate limit exceeded. 
+        The Pension provider or scheme shall retry the request using an exponential backoff strategy
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            Too Many Requests Error Example:
+              value:
+                type: 'https://example.com/probs/too-many-requests'
+                title: "Too Many Requests"
+                status: 429
+                datetimestamp: '2025-07-15T00:00:00.000Z'
+                errors:
+                - code: "TOO_MANY_REQUESTS"
+
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            Internal Server Error Example:
+              value:
+                type: 'https://example.com/probs/internal-server-error'
+                title: "Internal Server Error"
+                status: 500
+                datetimestamp: '2025-07-15T00:00:00.000Z'
+                errors:
+                - code: "INTERNAL_SERVER_ERROR"
+
+    ServiceUnavailableError:
+      description: Service Unavailable error
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            Service Unavailable Error Example:
+              value:
+                type: 'https://example.com/probs/service-unavailable-error'
+                title: "Service Unavailable Error"
+                status: 503
+                datetimestamp: '2025-07-15T00:00:00.000Z'
+                errors:
+                - code: "SERVICE_UNAVAILABLE"
+
+paths:
+  /service-availability/find:
+    post:
+      tags:
+      - service-availability
+      summary: Find service unavailability data
+      description: Find service unavailability data
+      operationId: findServiceUnavailabilityData
+      parameters:
+      - $ref: '#/components/parameters/X-Request-ID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              discriminator:
+                propertyName: submission_reason
+                mapping:
+                  "initial submission": '#/components/schemas/ServiceAvailabilityReportData'
+                  "resubmission": '#/components/schemas/ServiceAvailabilityReportData'
+                  "null submission": '#/components/schemas/NullSubmissionMultipleHolders'
+              anyOf:
+              - $ref: '#/components/schemas/NullSubmissionMultipleHolders'
+              - $ref: '#/components/schemas/ServiceAvailabilityReportData'
+
+            examples:
+              initialSubmissionOnTimeExample:
+                summary: Initial submission and status - on time example
+                value:
+                  record_id: "6ac7f2a5-d518-44bf-9dff-ec5bf7e46e06"
+                  reporting_period_start: "2025-11-01T00:00:00.000Z"
+                  submission_id: "b955b911-838c-4179-bd2f-089630c61a9d"
+                  submission_reason: "initial submission"
+                  submission_status: "on time"
+                  items:
+                  - "816f82b5-8e4f-407b-8c54-afb179c4af5a":
+                    - unavail_scheduled: false
+                      unavail_reason: "outage"
+                      start_date_ts: "2025-11-25T00:00:00.000Z"
+                      end_date_ts: "2025-11-25T14:24:01.248Z"
+                    - unavail_scheduled: true
+                      unavail_reason: "Downtime for system update"
+                      start_date_ts: "2025-11-26T03:00:00.000Z"
+                      end_date_ts: "2025-11-26T10:24:01.248Z"
+                    - unavail_scheduled: true
+                      unavail_reason: "Downtime for system update"
+                      start_date_ts: "2025-11-29T06:00:00.000Z"
+                      end_date_ts: "2025-11-29T10:00:00.248Z"
+                    "816f82b5-8e4f-407b-8c54-afb179c4af5c":
+                    - unavail_scheduled: true
+                      unavail_reason: "Downtime for system update"
+                      start_date_ts: "2025-11-25T00:00:00.000Z"
+                      end_date_ts: "2025-11-25T14:24:01.248Z"
+                    "816f82b5-8e4f-407b-8c54-afb179c4abba":
+                    - unavail_scheduled: true
+                      unavail_reason: "Downtime for system update"
+                      start_date_ts: "2025-11-02T00:00:00.000Z"
+                      end_date_ts: "2025-11-02T04:00:01.248Z"
+                    - unavail_scheduled: true
+                      unavail_reason: "Downtime for system update"
+                      start_date_ts: "2025-11-25T00:00:00.000Z"
+                      end_date_ts: "2025-11-25T14:24:01.248Z"
+
+              initialSubmissionLateExample:
+                summary: Initial submission and status - late example
+                value:
+                  record_id: "6ac7f2a5-d518-44bf-9dff-ec5bf7e46e06"
+                  reporting_period_start: "2025-11-01T00:00:00.000Z"
+                  submission_id: "b955b911-838c-4179-bd2f-089630c61a9d"
+                  submission_reason: "initial submission"
+                  submission_status: "late"
+                  items:
+                  - "816f82b5-8e4f-407b-8c54-afb179c4af5a":
+                    - unavail_scheduled: false
+                      unavail_reason: "outage"
+                      start_date_ts: "2025-11-25T00:00:00.000Z"
+                      end_date_ts: "2025-11-25T14:24:01.248Z"
+                    - unavail_scheduled: true
+                      unavail_reason: "Downtime for system update"
+                      start_date_ts: "2025-11-26T03:00:00.000Z"
+                      end_date_ts: "2025-11-26T10:24:01.248Z"
+                    - unavail_scheduled: true
+                      unavail_reason: "Downtime for system update"
+                      start_date_ts: "2025-11-29T06:00:00.000Z"
+                      end_date_ts: "2025-11-29T10:00:00.248Z"
+                    "816f82b5-8e4f-407b-8c54-afb179c4af5c":
+                    - unavail_scheduled: true
+                      unavail_reason: "Downtime for system update"
+                      start_date_ts: "2025-11-25T00:00:00.000Z"
+                      end_date_ts: "2025-11-25T14:24:01.248Z"
+                    "816f82b5-8e4f-407b-8c54-afb179c4abba":
+                    - unavail_scheduled: true
+                      unavail_reason: "Downtime for system update"
+                      start_date_ts: "2025-11-02T00:00:00.000Z"
+                      end_date_ts: "2025-11-02T04:00:01.248Z"
+                    - unavail_scheduled: true
+                      unavail_reason: "Downtime for system update"
+                      start_date_ts: "2025-11-25T00:00:00.000Z"
+                      end_date_ts: "2025-11-25T14:24:01.248Z"
+
+              reSubmissionCorrectionExample:
+                summary: Resubmission and status - correction example
+                value:
+                  record_id: "6ac7f2a5-d518-44bf-9dff-ec5bf7e46e06"
+                  reporting_period_start: "2025-03-19T00:00:00.000Z"
+                  submission_id: "b955b911-838c-4179-bd2f-089630c61a9d"
+                  submission_reason: "resubmission"
+                  submission_status: "correction"
+                  items:
+                  - "816f82b5-8e4f-407b-8c54-afb179c4af5a":
+                    - unavail_scheduled: false
+                      unavail_reason: "outage"
+                      start_date_ts: "2025-11-25T00:00:00.000Z"
+                      end_date_ts: "2025-11-25T14:24:01.248Z"
+                    "816f82b5-8e4f-407b-8c54-afb179c4af5c":
+                    - unavail_scheduled: true
+                      unavail_reason: "Downtime for system update"
+                      start_date_ts: "2025-11-25T00:00:00.000Z"
+                      end_date_ts: "2025-11-25T14:24:01.248Z"
+                    "816f82b5-8e4f-407b-8c54-afb179c4abba":
+                    - unavail_scheduled: true
+                      unavail_reason: "Downtime for system update"
+                      start_date_ts: "2025-11-02T00:00:00.000Z"
+                      end_date_ts: "2025-11-02T04:00:01.248Z"
+
+              nullSubmissionOnTimeExample:
+                summary: Null submission and status - on time example
+                value:
+                  record_id: "6ac7f2a5-d518-44bf-9dff-ec5bf7e46e06"
+                  submission_id: null
+                  submission_reason: "null submission"
+                  submission_status: "on time"
+                  reporting_period_start: "2025-03-19T00:00:00.000Z"
+                  items:
+                  - "816f82b5-8e4f-407b-8c54-afb179c4af5a"
+                  - "816f82b5-8e4f-407b-8c54-afb179c4af5c"
+                  - "816f82b5-8e4f-407b-8c54-afb179c4af5d"
+
+              nullSubmissionCorrectionExample:
+                summary: Null submission and status - correction example
+                value:
+                  record_id: "6ac7f2a5-d518-44bf-9dff-ec5bf7e46e06"
+                  submission_id: null
+                  submission_reason: "null submission"
+                  submission_status: "correction"
+                  reporting_period_start: "2025-03-19T00:00:00.000Z"
+                  items:
+                  - "816f82b5-8e4f-407b-8c54-afb179c4af5a"
+                  - "816f82b5-8e4f-407b-8c54-afb179c4af5c"
+                  - "816f82b5-8e4f-407b-8c54-afb179c4af5d"
+                  - "3b2ad12c-2aad-418a-b0cc-d01772b35732"
+                  - "1ac4ed9f-76cf-4abb-99fb-ff78d4be2ac8"
+                  - "35e3730e-2cb7-4b2a-b163-a72e7d76406d"
+
+      responses:
+        '202':
+          description: ACCEPTED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+
+        '400':
+          $ref: '#/components/responses/ServiceAvailabilityBadRequestError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowedError'
+        '413':
+          $ref: '#/components/responses/ContentTooLargeError'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaTypeError'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+        default:
+          $ref: '#/components/responses/InternalServerError'
+
+  /service-availability/view:
+    post:
+      tags:
+      - service-availability
+      summary: View service unavailability data
+      description: View service unavailability data
+      operationId: viewServiceUnavailabilityData
+      parameters:
+      - $ref: '#/components/parameters/X-Request-ID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              discriminator:
+                propertyName: submission_reason
+                mapping:
+                  "initial submission": '#/components/schemas/ServiceAvailabilityReportData'
+                  "resubmission": '#/components/schemas/ServiceAvailabilityReportData'
+                  "null submission": '#/components/schemas/NullSubmissionMultipleHolders'
+              anyOf:
+              - $ref: '#/components/schemas/NullSubmissionMultipleHolders'
+              - $ref: '#/components/schemas/ServiceAvailabilityReportData'
+            examples:
+              initialSubmissionOnTimeExample:
+                summary: Initial submission and status - on time example
+                value:
+                  record_id: "6ac7f2a5-d518-44bf-9dff-ec5bf7e46e06"
+                  submission_reason: "initial submission"
+                  submission_status: "on time"
+                  reporting_period_start: "2025-03-19T00:00:00.000Z"
+                  submission_id: b955b911-838c-4179-bd2f-089630c61a9d
+                  items:
+                  - "816f82b5-8e4f-407b-8c54-afb179c4af5a":
+                    - unavail_scheduled: false
+                      unavail_reason: "outage"
+                      start_date_ts: "2025-11-25T00:00:00.000Z"
+                      end_date_ts: "2025-11-25T14:24:01.248Z"
+                    - unavail_scheduled: true
+                      unavail_reason: "Downtime for system update"
+                      start_date_ts: "2025-11-26T03:00:00.000Z"
+                      end_date_ts: "2025-11-26T10:24:01.248Z"
+                    - unavail_scheduled: true
+                      unavail_reason: "Downtime for system update"
+                      start_date_ts: "2025-11-29T06:00:00.000Z"
+                      end_date_ts: "2025-11-29T10:00:00.248Z"
+                    "816f82b5-8e4f-407b-8c54-afb179c4af5c":
+                    - unavail_scheduled: true
+                      unavail_reason: "Downtime for system update"
+                      start_date_ts: "2025-11-25T00:00:00.000Z"
+                      end_date_ts: "2025-11-25T14:24:01.248Z"
+                    "816f82b5-8e4f-407b-8c54-afb179c4abba":
+                    - unavail_scheduled: true
+                      unavail_reason: "Downtime for system update"
+                      start_date_ts: "2025-11-02T00:00:00.000Z"
+                      end_date_ts: "2025-11-02T04:00:01.248Z"
+                    - unavail_scheduled: true
+                      unavail_reason: "Downtime for system update"
+                      start_date_ts: "2025-11-25T00:00:00.000Z"
+                      end_date_ts: "2025-11-25T14:24:01.248Z"
+              initialSubmissionLateExample:
+                summary: Initial submission and status - Late example
+                value:
+                  record_id: "6ac7f2a5-d518-44bf-9dff-ec5bf7e46e06"
+                  submission_reason: "initial submission"
+                  submission_status: "late"
+                  reporting_period_start: "2025-03-19T00:00:00.000Z"
+                  submission_id: b955b911-838c-4179-bd2f-089630c61a9d
+                  items:
+                  - "816f82b5-8e4f-407b-8c54-afb179c4af5a":
+                    - unavail_scheduled: false
+                      unavail_reason: "outage"
+                      start_date_ts: "2025-11-25T00:00:00.000Z"
+                      end_date_ts: "2025-11-25T14:24:01.248Z"
+                    - unavail_scheduled: true
+                      unavail_reason: "Downtime for system update"
+                      start_date_ts: "2025-11-26T03:00:00.000Z"
+                      end_date_ts: "2025-11-26T10:24:01.248Z"
+                    - unavail_scheduled: true
+                      unavail_reason: "Downtime for system update"
+                      start_date_ts: "2025-11-29T06:00:00.000Z"
+                      end_date_ts: "2025-11-29T10:00:00.248Z"
+                    "816f82b5-8e4f-407b-8c54-afb179c4af5c":
+                    - unavail_scheduled: true
+                      unavail_reason: "Downtime for system update"
+                      start_date_ts: "2025-11-25T00:00:00.000Z"
+                      end_date_ts: "2025-11-25T14:24:01.248Z"
+                    "816f82b5-8e4f-407b-8c54-afb179c4abba":
+                    - unavail_scheduled: true
+                      unavail_reason: "Downtime for system update"
+                      start_date_ts: "2025-11-02T00:00:00.000Z"
+                      end_date_ts: "2025-11-02T04:00:01.248Z"
+                    - unavail_scheduled: true
+                      unavail_reason: "Downtime for system update"
+                      start_date_ts: "2025-11-25T00:00:00.000Z"
+                      end_date_ts: "2025-11-25T14:24:01.248Z"
+
+              reSubmissionCorrectionExample:
+                summary: Resubmission and status - correction example
+                value:
+                  record_id: "6ac7f2a5-d518-44bf-9dff-ec5bf7e46e06"
+                  reporting_period_start: "2025-03-19T00:00:00.000Z"
+                  submission_id: "b955b911-838c-4179-bd2f-089630c61a9d"
+                  submission_reason: "resubmission"
+                  submission_status: "correction"
+                  items:
+                  - "816f82b5-8e4f-407b-8c54-afb179c4af5a":
+                    - unavail_scheduled: false
+                      unavail_reason: "outage"
+                      start_date_ts: "2025-11-25T00:00:00.000Z"
+                      end_date_ts: "2025-11-25T14:24:01.248Z"
+                    "816f82b5-8e4f-407b-8c54-afb179c4af5c":
+                    - unavail_scheduled: true
+                      unavail_reason: "Downtime for system update"
+                      start_date_ts: "2025-11-25T00:00:00.000Z"
+                      end_date_ts: "2025-11-25T14:24:01.248Z"
+                    "816f82b5-8e4f-407b-8c54-afb179c4abba":
+                    - unavail_scheduled: true
+                      unavail_reason: "Downtime for system update"
+                      start_date_ts: "2025-11-02T00:00:00.000Z"
+                      end_date_ts: "2025-11-02T04:00:01.248Z"
+
+              nullSubmissionOnTimeExample:
+                summary: Null submission and status - on time example
+                value:
+                  record_id: "6ac7f2a5-d518-44bf-9dff-ec5bf7e46e06"
+                  submission_id: null
+                  submission_reason: "null submission"
+                  submission_status: "on time"
+                  reporting_period_start: "2025-03-19T00:00:00.000Z"
+                  items:
+                  - "b7d691c9-72bf-465f-9f7b-f4d2ac24420f"
+                  - "b6f557c1-191a-4d9a-abca-4be715c47884"
+                  - "bce99ef7-699f-4163-b619-0f626fb628d8"
+                  - "97c0424a-3500-46f0-b11a-9820e20dff5e"
+
+              nullSubmissionCorrectionExample:
+                summary: Null submission and status - correction example
+                value:
+                  record_id: "6ac7f2a5-d518-44bf-9dff-ec5bf7e46e06"
+                  submission_id: null
+                  submission_reason: "null submission"
+                  submission_status: "correction"
+                  reporting_period_start: "2025-03-19T00:00:00.000Z"
+                  items:
+                  - "1697c794-9884-4827-b92e-2813cafd7a62"
+                  - "9681fbc5-93fe-4f71-8539-d040dc05ec39"
+                  - "e3e71d20-62ba-42e0-bb39-4a42f4641ab7"
+                  - "216cdf31-c4c7-4e0c-a193-604ef332ad55"
+                  - "21976fbd-a61a-49b0-b759-df25367d9d47"
+                  - "7982a10d-1f5c-4eba-a32d-fa9345df7436"
+      responses:
+        '202':
+          description: ACCEPTED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+
+        '400':
+          $ref: '#/components/responses/ServiceAvailabilityBadRequestError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowedError'
+        '413':
+          $ref: '#/components/responses/ContentTooLargeError'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaTypeError'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+        default:
+          $ref: '#/components/responses/InternalServerError'
+
+  /view-response/request-number:
+    post:
+      tags:
+      - view-response
+      summary: View response metrics - request number
+      description: |
+        View response - request number: Number of view requests received
+      operationId: viewResponseNumber
+      parameters:
+      - $ref: '#/components/parameters/X-Request-ID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/ViewResponseRequestNumberData'
+              discriminator:
+                propertyName: submission_reason
+                mapping:
+                  initial submission: '#/components/schemas/ViewResponseRequestNumberData'
+                  resubmission: '#/components/schemas/ViewResponseRequestNumberData'
+            examples:
+              initialSubmissionAndOnTimeExample:
+                summary: Initial submission and status - on time example
+                value:
+                  holdernameGuid: "816f82b5-8e4f-407b-8c54-afb179c4af5a"
+                  record_id: "6ac7f2a5-d518-44bf-9dff-ec5bf7e46e06"
+                  submission_reason: "initial submission"
+                  submission_id: null
+                  submission_status: "on time"
+                  reporting_period_start: "2025-03-19T00:00:00.000Z"
+                  req_count: 123456
+              initialSubmissionLateExample:
+                summary: Initial submission and status - late example
+                value:
+                  holdernameGuid: "816f82b5-8e4f-407b-8c54-afb179c4af5a"
+                  record_id: "6ac7f2a5-d518-44bf-9dff-ec5bf7e46e06"
+                  submission_reason: "initial submission"
+                  submission_id: null
+                  submission_status: "late"
+                  reporting_period_start: "2025-03-19T00:00:00.000Z"
+                  req_count: 123456
+
+              reSubmissionCorrectionExample:
+                summary: Resubmission and status - correction example
+                value:
+                  holdernameGuid: "816f82b5-8e4f-407b-8c54-afb179c4af5a"
+                  record_id: "6ac7f2a5-d518-44bf-9dff-ec5bf7e46e06"
+                  submission_reason: "resubmission"
+                  submission_id: null
+                  submission_status: "correction"
+                  reporting_period_start: "2025-03-19T00:00:00.000Z"
+                  req_count: 123456
+      responses:
+        '202':
+          description: ACCEPTED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+
+        '400':
+          $ref: '#/components/responses/ViewResponseRequestNumberBadRequestError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowedError'
+        '413':
+          $ref: '#/components/responses/ContentTooLargeError'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaTypeError'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+        default:
+          $ref: '#/components/responses/InternalServerError'
+
+  /view-response/response-time:
+    post:
+      tags:
+      - view-response
+      summary: View response Time
+      description: |
+        View response Time - the date and time of both the view request and the view response returned when each view response that exceeds 10 seconds
+      operationId: viewResponseTime
+      parameters:
+      - $ref: '#/components/parameters/X-Request-ID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              discriminator:
+                propertyName: submission_reason
+                mapping:
+                  "initial submission": '#/components/schemas/ViewResponseResponseTimesData'
+                  "resubmission": '#/components/schemas/ViewResponseResponseTimesData'
+                  "null submission": '#/components/schemas/NullSubmission'
+              anyOf:
+              - $ref: '#/components/schemas/ViewResponseResponseTimesData'
+              - $ref: '#/components/schemas/NullSubmission'
+            examples:
+              initial submission  and status - on time example:
+                summary: Initial submission  and status - on time example
+                value:
+                  holdernameGuid: "816f82b5-8e4f-407b-8c54-afb179c4af5a"
+                  record_id: "3eac3a8b-fbdc-4897-b3ea-908a6b411d7f"
+                  submission_id: "b955b911-838c-4179-bd2f-089630c61a9d"
+                  submission_reason: "initial submission"
+                  submission_status: "on time"
+                  reporting_period_start: "2025-11-01T00:00:00.000Z"
+                  items:
+                  - req_date_ts: "2021-11-25T00:00:00.000Z"
+                    resp_date_ts: "2021-11-25T00:00:11.000Z"
+                  - req_date_ts: "2021-11-25T00:00:00.000Z"
+                    resp_date_ts: "2021-11-25T00:00:12.001Z"
+                  - req_date_ts: "2021-11-25T00:00:00.000Z"
+                    resp_date_ts: "2021-11-25T00:00:15.000Z"
+                  - req_date_ts: "2021-11-25T00:00:00.000Z"
+                    resp_date_ts: "2021-11-25T00:01:15.000Z"
+                  - req_date_ts: "2021-11-25T00:00:00.000Z"
+                    resp_date_ts: "2021-11-25T01:00:00.000Z"
+
+              initialSubmissionLateExample:
+                summary: Initial submission  and status - late example
+                value:
+                  holdernameGuid: "816f82b5-8e4f-407b-8c54-afb179c4af5a"
+                  record_id: "3eac3a8b-fbdc-4897-b3ea-908a6b411d7f"
+                  submission_id: "b955b911-838c-4179-bd2f-089630c61a9d"
+                  submission_reason: "initial submission"
+                  submission_status: "late"
+                  reporting_period_start: "2025-11-01T00:00:00.000Z"
+                  items:
+                  - req_date_ts: "2021-11-25T00:00:00.000Z"
+                    resp_date_ts: "2021-11-25T00:00:11.000Z"
+
+              reSubmissionCorrectionExample:
+                summary: Resubmission and status - correction example
+                value:
+                  holdernameGuid: "816f82b5-8e4f-407b-8c54-afb179c4af5a"
+                  record_id: "3eac3a8b-fbdc-4897-b3ea-908a6b411d7f"
+                  submission_id: "b955b911-838c-4179-bd2f-089630c61a9d"
+                  submission_reason: "resubmission"
+                  submission_status: "correction"
+                  reporting_period_start: "2025-11-01T00:00:00.000Z"
+                  items:
+                  - req_date_ts: "2021-11-25T00:00:00.000Z"
+                    resp_date_ts: "2021-11-25T14:24:01.248Z"
+
+              nullSubmissionOnTimeExample:
+                summary: Null submission and status - on time example
+                value:
+                  holdernameGuid: "816f82b5-8e4f-407b-8c54-afb179c4af5a"
+                  record_id: "3eac3a8b-fbdc-4897-b3ea-908a6b411d7f"
+                  submission_id: null
+                  reporting_period_start: "2025-11-01T00:00:00.000Z"
+                  submission_reason: "null submission"
+                  submission_status: "on time"
+
+              nullSubmissionCorrectionExample:
+                summary: Null submission and status - correction example
+                value:
+                  holdernameGuid: "816f82b5-8e4f-407b-8c54-afb179c4af5a"
+                  record_id: "3eac3a8b-fbdc-4897-b3ea-908a6b411d7f"
+                  submission_id: null
+                  reporting_period_start: "2025-11-01T00:00:00.000Z"
+                  submission_reason: "null submission"
+                  submission_status: "correction"
+
+      responses:
+        '202':
+          description: ACCEPTED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+
+        '400':
+          $ref: '#/components/responses/ViewResponseResponseTimeBadRequestError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowedError'
+        '413':
+          $ref: '#/components/responses/ContentTooLargeError'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaTypeError'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+        default:
+          $ref: '#/components/responses/InternalServerError'
+
+  /view-response/calculations:
+    post:
+      tags:
+      - view-response
+      summary: View response calculation
+      description: View response calculation
+      operationId: viewResponseCalculation
+      parameters:
+      - $ref: '#/components/parameters/X-Request-ID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/NullSubmission'
+              - $ref: '#/components/schemas/CalculationRequest'
+              discriminator:
+                propertyName: submission_reason
+                mapping:
+                  "initial submission": '#/components/schemas/CalculationRequest'
+                  "resubmission": '#/components/schemas/CalculationRequest'
+                  "null submission": '#/components/schemas/NullSubmission'
+
+            examples:
+              singleOnTimeExample:
+                summary: Initial submission, single calculation and status - on time
+                value:
+                  calculation_type: "single"
+                  holdernameGuid: "816f82b5-8e4f-407b-8c54-afb179c4af5a"
+                  record_id: "3eac3a8b-fbdc-4897-b3ea-908a6b411d7f"
+                  submission_id: "b955b911-838c-4179-bd2f-089630c61a9d"
+                  submission_reason: "initial submission"
+                  submission_status: "on time"
+                  reporting_period_start: "2025-11-01T00:00:00.000Z"
+                  single_calculation:
+                    items:
+                    - value_code: DBC
+                      calculation_start_date: "2025-10-22T00:00:00.000Z"
+                      calculation_end_date: "2025-11-01T00:00:00.000Z"
+                    - value_code: DCC
+                      calculation_start_date: "2025-10-29T00:00:00.000Z"
+                      calculation_end_date: "2025-11-01T00:00:00.000Z"
+              singleLateExample:
+                summary: Initial submission, single calculation and status - late
+                value:
+                  calculation_type: "single"
+                  holdernameGuid: "816f82b5-8e4f-407b-8c54-afb179c4af5a"
+                  record_id: "3eac3a8b-fbdc-4897-b3ea-908a6b411d7f"
+                  submission_id: "b955b911-838c-4179-bd2f-089630c61a9d"
+                  submission_reason: "initial submission"
+                  submission_status: "late"
+                  reporting_period_start: "2025-11-01T00:00:00.000Z"
+                  single_calculation:
+                    items:
+                    - value_code: DBC
+                      calculation_start_date: "2025-10-22T00:00:00.000Z"
+                      calculation_end_date: "2025-11-01T00:00:00.000Z"
+                    - value_code: DCC
+                      calculation_start_date: "2025-10-29T00:00:00.000Z"
+                      calculation_end_date: "2025-11-01T00:00:00.000Z"
+                    - value_code: DBC
+                      calculation_start_date: "2025-10-22T00:00:00.000Z"
+                      calculation_end_date: "2025-11-01T00:00:00.000Z"
+                    - value_code: DCC
+                      calculation_start_date: "2025-10-29T00:00:00.000Z"
+                      calculation_end_date: "2025-11-01T00:00:00.000Z"
+
+              multipleOnTimeExample:
+                summary: Initial submission, multiple calculation and status - on time
+                value:
+                  calculation_type: multiple
+                  holdernameGuid: "816f82b5-8e4f-407b-8c54-afb179c4af5a"
+                  record_id: "3eac3a8b-fbdc-4897-b3ea-908a6b411d7f"
+                  submission_id: "b955b911-838c-4179-bd2f-089630c61a9d"
+                  submission_reason: "initial submission"
+                  submission_status: "on time"
+                  reporting_period_start: "2025-11-01T00:00:00.000Z"
+                  multiple_calculation:
+                    eriCalculationData:
+                      items:
+                      - value_code: DBC
+                        calculation_start_date: "2025-10-22T00:00:00.000Z"
+                        calculation_end_date: "2025-11-01T00:00:00.000Z"
+                      - value_code: DCC
+                        calculation_start_date: "2025-10-29T00:00:00.000Z"
+                        calculation_end_date: "2025-11-01T00:00:00.000Z"
+                      - value_code: DBC
+                        calculation_start_date: "2025-10-22T00:00:00.000Z"
+                        calculation_end_date: "2025-11-01T00:00:00.000Z"
+                    accruedCalculationData:
+                      items:
+                      - value_code: DBC
+                        calculation_start_date: "2025-10-22T00:00:00.000Z"
+                        calculation_end_date: "2025-11-01T00:00:00.000Z"
+                      - value_code: DCC
+                        calculation_start_date: "2025-10-29T00:00:00.000Z"
+                        calculation_end_date: "2025-11-01T00:00:00.000Z"
+                      - value_code: DCC
+                        calculation_start_date: "2025-10-22T00:00:00.000Z"
+                        calculation_end_date: "2025-11-01T00:00:00.000Z"
+              multipleLateExample:
+                summary: Initial submission, multiple calculation and status - late
+                value:
+                  calculation_type: multiple
+                  holdernameGuid: "816f82b5-8e4f-407b-8c54-afb179c4af5a"
+                  record_id: "3eac3a8b-fbdc-4897-b3ea-908a6b411d7f"
+                  submission_id: "b955b911-838c-4179-bd2f-089630c61a9d"
+                  submission_reason: "initial submission"
+                  submission_status: "late"
+                  reporting_period_start: "2025-11-01T00:00:00.000Z"
+                  multiple_calculation:
+                    eriCalculationData:
+                      items:
+                      - value_code: DBC
+                        calculation_start_date: "2025-10-22T00:00:00.000Z"
+                        calculation_end_date: "2025-11-01T00:00:00.000Z"
+                      - value_code: DCC
+                        calculation_start_date: "2025-10-29T00:00:00.000Z"
+                        calculation_end_date: "2025-11-01T00:00:00.000Z"
+                      - value_code: DCC
+                        calculation_start_date: "2025-10-29T00:00:00.000Z"
+                        calculation_end_date: "2025-11-01T00:00:00.000Z"
+                    accruedCalculationData:
+                      items:
+                      - value_code: DBC
+                        calculation_start_date: "2025-10-22T00:00:00.000Z"
+                        calculation_end_date: "2025-11-01T00:00:00.000Z"
+                      - value_code: DCC
+                        calculation_start_date: "2025-10-29T00:00:00.000Z"
+                        calculation_end_date: "2025-11-01T00:00:00.000Z"
+                      - value_code: DCC
+                        calculation_start_date: "2025-10-29T00:00:00.000Z"
+                        calculation_end_date: "2025-11-01T00:00:00.000Z"
+
+              reSubmissionSingleCorrectionExample:
+                summary: Resubmission, single calculation and status - correction
+                value:
+                  calculation_type: single
+                  holdernameGuid: "816f82b5-8e4f-407b-8c54-afb179c4af5a"
+                  record_id: "3eac3a8b-fbdc-4897-b3ea-908a6b411d7f"
+                  submission_id: "b955b911-838c-4179-bd2f-089630c61a9d"
+                  submission_reason: "resubmission"
+                  submission_status: "correction"
+                  reporting_period_start: "2025-11-01T00:00:00.000Z"
+                  single_calculation:
+                    items:
+                    - value_code: DBC
+                      calculation_start_date: "2025-10-22T00:00:00.000Z"
+                      calculation_end_date: "2025-11-01T00:00:00.000Z"
+                    - value_code: DCC
+                      calculation_start_date: "2025-10-29T00:00:00.000Z"
+                      calculation_end_date: "2025-11-01T00:00:00.000Z"
+
+              reSubmissionMultipleCorrectionExample:
+                summary: Resubmission and multiple calculation
+                value:
+                  calculation_type: multiple
+                  holdernameGuid: "816f82b5-8e4f-407b-8c54-afb179c4af5a"
+                  record_id: "3eac3a8b-fbdc-4897-b3ea-908a6b411d7f"
+                  submission_id: "b955b911-838c-4179-bd2f-089630c61a9d"
+                  submission_reason: "resubmission"
+                  submission_status: "correction"
+                  reporting_period_start: "2025-11-01T00:00:00.000Z"
+                  multiple_calculation:
+                    eriCalculationData:
+                      items:
+                      - value_code: DBC
+                        calculation_start_date: "2025-10-22T00:00:00.000Z"
+                        calculation_end_date: "2025-11-01T00:00:00.000Z"
+                      - value_code: DBC
+                        calculation_start_date: "2025-10-22T00:00:00.000Z"
+                        calculation_end_date: "2025-11-01T00:00:00.000Z"
+                      - value_code: DCC
+                        calculation_start_date: "2025-10-29T00:00:00.000Z"
+                        calculation_end_date: "2025-11-01T00:00:00.000Z"
+                    accruedCalculationData:
+                      items:
+                      - value_code: DBC
+                        calculation_start_date: "2025-10-22T00:00:00.000Z"
+                        calculation_end_date: "2025-11-01T00:00:00.000Z"
+                      - value_code: DBC
+                        calculation_start_date: "2025-10-22T00:00:00.000Z"
+                        calculation_end_date: "2025-11-01T00:00:00.000Z"
+                      - value_code: DCC
+                        calculation_start_date: "2025-10-29T00:00:00.000Z"
+                        calculation_end_date: "2025-11-01T00:00:00.000Z"
+
+              nullSubmissionOnTimeExample:
+                summary: Null submission and status - on time example
+                value:
+                  holdernameGuid: "816f82b5-8e4f-407b-8c54-afb179c4af5a"
+                  record_id: "3eac3a8b-fbdc-4897-b3ea-908a6b411d7f"
+                  submission_id: null
+                  reporting_period_start: "2025-11-01T00:00:00.000Z"
+                  submission_reason: "null submission"
+                  submission_status: "on time"
+
+              nullSubmissionCorrectionExample:
+                summary: Null submission and status - correction example
+                value:
+                  holdernameGuid: "816f82b5-8e4f-407b-8c54-afb179c4af5a"
+                  record_id: "3eac3a8b-fbdc-4897-b3ea-908a6b411d7f"
+                  submission_id: null
+                  reporting_period_start: "2025-11-01T00:00:00.000Z"
+                  submission_reason: "null submission"
+                  submission_status: "correction"
+
+      responses:
+        '202':
+          description: ACCEPTED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+
+        '400':
+          $ref: '#/components/responses/ViewResponseCalculationsBadRequestError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowedError'
+        '413':
+          $ref: '#/components/responses/ContentTooLargeError'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaTypeError'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+        default:
+          $ref: '#/components/responses/InternalServerError'
+
+  /view-response/unavailable:
+    post:
+      tags:
+      - view-response
+      summary: View response unavailable
+      description: View response unavailable
+      operationId: viewResponseUnavailable
+      parameters:
+      - $ref: '#/components/parameters/X-Request-ID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/ViewResponseUnavailableRequest'
+              discriminator:
+                propertyName: submission_reason
+                mapping:
+                  initial submission: '#/components/schemas/ViewResponseUnavailableRequest'
+                  resubmission: '#/components/schemas/ViewResponseUnavailableRequest'
+
+            examples:
+              initialSubmissionOnTimeExample:
+                summary: Initial submission status - on time example
+                value:
+                  holdernameGuid: "816f82b5-8e4f-407b-8c54-afb179c4af5a"
+                  record_id: "3eac3a8b-fbdc-4897-b3ea-908a6b411d7f"
+                  submission_id: "b955b911-838c-4179-bd2f-089630c61a9d"
+                  submission_reason: "initial submission"
+                  submission_status: "on time"
+                  reporting_period_start: "2025-03-19T00:00:00.000Z"
+                  contact_count: 12
+                  missingadmin_count: 0
+                  temperror_count: 0
+                  eri_unavail_ano_count: 0
+                  eri_unavail_ppf_count: 0
+                  eri_unavail_trn_count: 0
+                  accrued_unavail_ano_count: 0
+                  accrued_unavail_ppf_count: 0
+                  accrued_unavail_trn_count: 0
+
+              initialSubmissionLateExample:
+                summary: Initial submission status - late example
+                value:
+                  holdernameGuid: "816f82b5-8e4f-407b-8c54-afb179c4af5a"
+                  record_id: "3eac3a8b-fbdc-4897-b3ea-908a6b411d7f"
+                  submission_id: "b955b911-838c-4179-bd2f-089630c61a9d"
+                  submission_reason: "initial submission"
+                  submission_status: "late"
+                  reporting_period_start: "2025-03-19T00:00:00.000Z"
+                  contact_count: 12
+                  missingadmin_count: 0
+                  temperror_count: 0
+                  eri_unavail_ano_count: 0
+                  eri_unavail_ppf_count: 0
+                  eri_unavail_trn_count: 0
+                  accrued_unavail_ano_count: 0
+                  accrued_unavail_ppf_count: 0
+                  accrued_unavail_trn_count: 0
+
+              reSubmissionCorrectionExample:
+                summary: Resubmission status - correction example
+                value:
+                  holdernameGuid: "816f82b5-8e4f-407b-8c54-afb179c4af5a"
+                  record_id: "3eac3a8b-fbdc-4897-b3ea-908a6b411d7f"
+                  submission_id: "b955b911-838c-4179-bd2f-089630c61a9d"
+                  submission_reason: "resubmission"
+                  submission_status: "correction"
+                  reporting_period_start: "2025-03-19T00:00:00.000Z"
+                  contact_count: 123456
+                  missingadmin_count: 0
+                  temperror_count: 0
+                  eri_unavail_ano_count: 0
+                  eri_unavail_ppf_count: 0
+                  eri_unavail_trn_count: 0
+                  accrued_unavail_ano_count: 0
+                  accrued_unavail_ppf_count: 0
+                  accrued_unavail_trn_count: 0
+
+      responses:
+        '202':
+          description: ACCEPTED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+
+        '400':
+          $ref: '#/components/responses/ViewResponseUnavailableBadRequestError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowedError'
+        '413':
+          $ref: '#/components/responses/ContentTooLargeError'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaTypeError'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+        default:
+          $ref: '#/components/responses/InternalServerError'

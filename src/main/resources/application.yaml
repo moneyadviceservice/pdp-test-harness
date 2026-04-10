@@ -44,4 +44,7 @@ spring:
     database-platform: org.hibernate.dialect.H2Dialect
     generate-ddl: true
 
-logging.level.root: OFF
+logging:
+  level:
+    root: INFO
+    uk.org.ca.stub.simulator: INFO

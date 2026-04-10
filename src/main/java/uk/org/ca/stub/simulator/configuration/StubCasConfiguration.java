@@ -8,7 +8,8 @@ import org.springframework.context.annotation.Configuration;
         "uk.org.ca.stub.simulator.rest",
         "uk.org.ca.stub.simulator.configuration",
         "uk.org.ca.stub.simulator.service",
-        "uk.org.ca.stub.simulator.filter"
+        "uk.org.ca.stub.simulator.filter",
+        "uk.org.ca.stub.simulator.config"
 })
 public class StubCasConfiguration {
 }

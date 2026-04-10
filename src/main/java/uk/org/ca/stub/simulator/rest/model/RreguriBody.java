@@ -22,6 +22,7 @@ import java.util.Objects;
 @JsonTypeName("rreguri_body")
 public class RreguriBody {
 
+  public static final String NAME_REGEX_PATTERN = "^urn:pei:(?:(?:[0-9a-fA-F]){8}-(?:[0-9a-fA-F]){4}-(?:[0-9a-fA-F]){4}-(?:[0-9a-fA-F]){4}-(?:[0-9a-fA-F]){12}:(?:[0-9a-fA-F]){8}-(?:[0-9a-fA-F]){4}-(?:[0-9a-fA-F]){4}-(?:[0-9a-fA-F]){4}-(?:[0-9a-fA-F]){12})$";
   private String name;
 
   private String description;
@@ -94,7 +95,7 @@ public class RreguriBody {
    * @return name
   */
   @NotNull
-  @Pattern(regexp = "^urn:pei:(?:(?:[0-9a-fA-F]){8}-(?:[0-9a-fA-F]){4}-(?:[0-9a-fA-F]){4}-(?:[0-9a-fA-F]){4}-(?:[0-9a-fA-F]){12}?:(?:[0-9a-fA-F]){8}-(?:[0-9a-fA-F]){4}-(?:[0-9a-fA-F]){4}-(?:[0-9a-fA-F]){4}-(?:[0-9a-fA-F]){12})$")
+  @Pattern(regexp = NAME_REGEX_PATTERN)
   @Schema(name = "name", example = "urn:pei:a704ecce-06c0-46ad-a399-ab9eb43568df:a3f38ece-b586-45a6-890c-9b4c045747c8", description = "The URN for the resource in the form urn:pei:<holderGuid>:<assetGuid>  Where <holderGuid> is the guid issued to the data provider during onboarding and <assetGuid> is the unique id by which the matched pension within the pension data provider's system.", requiredMode = Schema.RequiredMode.REQUIRED)
   @JsonProperty("name")
   public String getName() {

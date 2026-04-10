@@ -1,22 +1,27 @@
 package uk.org.ca.stub.simulator.rest.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-
+import java.net.URI;
 import java.util.Objects;
-import java.util.UUID;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.time.OffsetDateTime;
+import jakarta.validation.constraints.*;
+import io.swagger.v3.oas.annotations.media.Schema;
+
+
+import java.util.*;
+import jakarta.annotation.Generated;
 
 /**
  * PostRegisteredPeis201Response
  */
 
 @JsonTypeName("post_registered_peis_201_response")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-02-13T15:34:29.284844400Z[Europe/London]", comments = "Generator version: 7.5.0")
 public class PostRegisteredPeis201Response {
 
-  private UUID resourceId;
+  private String resourceId;
 
   public PostRegisteredPeis201Response() {
     super();
@@ -25,11 +30,11 @@ public class PostRegisteredPeis201Response {
   /**
    * Constructor with only required parameters
    */
-  public PostRegisteredPeis201Response(UUID resourceId) {
+  public PostRegisteredPeis201Response(String resourceId) {
     this.resourceId = resourceId;
   }
 
-  public PostRegisteredPeis201Response resourceId(UUID resourceId) {
+  public PostRegisteredPeis201Response resourceId(String resourceId) {
     this.resourceId = resourceId;
     return this;
   }
@@ -38,14 +43,14 @@ public class PostRegisteredPeis201Response {
    * The unique id of the newly created resource.
    * @return resourceId
   */
-  @NotNull @Valid 
-  @Schema(name = "resource_id", example = "a9482564-5391-49e7-b43f-fdec1aed3005", description = "The unique id of the newly created resource.", requiredMode = Schema.RequiredMode.REQUIRED)
+  @NotNull
+  @Schema(name = "resource_id", example = "a9482564-5391-49e7-b43f-fdec1aed30050", description = "The unique id of the newly created resource.", requiredMode = Schema.RequiredMode.REQUIRED)
   @JsonProperty("resource_id")
-  public UUID getResourceId() {
+  public String getResourceId() {
     return resourceId;
   }
 
-  public void setResourceId(UUID resourceId) {
+  public void setResourceId(String resourceId) {
     this.resourceId = resourceId;
   }
 
@@ -57,7 +62,7 @@ public class PostRegisteredPeis201Response {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    var postRegisteredPeis201Response = (PostRegisteredPeis201Response) o;
+    PostRegisteredPeis201Response postRegisteredPeis201Response = (PostRegisteredPeis201Response) o;
     return Objects.equals(this.resourceId, postRegisteredPeis201Response.resourceId);
   }
 
@@ -68,7 +73,7 @@ public class PostRegisteredPeis201Response {
 
   @Override
   public String toString() {
-    var sb = new StringBuilder();
+    StringBuilder sb = new StringBuilder();
     sb.append("class PostRegisteredPeis201Response {\n");
     sb.append("    resourceId: ").append(toIndentedString(resourceId)).append("\n");
     sb.append("}");

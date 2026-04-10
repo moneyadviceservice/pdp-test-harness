@@ -164,7 +164,7 @@ class TokenApiControllerTest extends AbstractControllerTest {
         map.add("grant_type", grant);
         map.add("ticket", dummyJwt);
         map.add("claim_token", dummyJwt);
-        map.add("claim_token_format", "pension_dashboad_pat"); // yes, there is a typo, copied from original
+        map.add("claim_token_format", "pension_dashboard_pat");
         map.add("scope", scope);
         return new HttpEntity<>(map, headers);
     }

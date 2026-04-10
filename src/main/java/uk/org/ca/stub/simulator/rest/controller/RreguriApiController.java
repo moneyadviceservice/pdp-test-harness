@@ -38,7 +38,7 @@ public class RreguriApiController extends AbstractApiController implements Rregu
     public ResponseEntity<Void> deleteRegisteredPeisId(UUID xRequestID, String deletionReason, String resourceId, HttpServletRequest request) {
         String pat = getTokenFromHeader(request.getHeader(HttpHeaders.AUTHORIZATION));
 
-        ResponseEntity asssertedResponse = checkTokenForAssertionsForRreguriDelete(pat);
+        ResponseEntity<Void> asssertedResponse = checkTokenForAssertionsForRreguriDelete(pat);
         if (asssertedResponse != null) {
             return asssertedResponse;
         }
@@ -69,7 +69,7 @@ public class RreguriApiController extends AbstractApiController implements Rregu
     public ResponseEntity<PatchRegisteredPeisId200Response> patchRegisteredPeisId(UUID xRequestID, String resourceId, RreguriResourceIdBody rreguriResourceIdBody, HttpServletRequest request) {
         String pat = getTokenFromHeader(request.getHeader(HttpHeaders.AUTHORIZATION));
 
-        ResponseEntity asssertedResponse = checkTokenForAssertionsForRreguriPatch(pat);
+        ResponseEntity<PatchRegisteredPeisId200Response> asssertedResponse = checkTokenForAssertionsForRreguriPatch(pat);
         if (asssertedResponse != null) {
             return asssertedResponse;
         }
@@ -83,7 +83,7 @@ public class RreguriApiController extends AbstractApiController implements Rregu
     public ResponseEntity<PostRegisteredPeis201Response> postRegisteredPeis(UUID xRequestID, RreguriBody rreguriBody, HttpServletRequest request) {
         String pat = getTokenFromHeader(request.getHeader(HttpHeaders.AUTHORIZATION));
 
-        ResponseEntity asssertedResponse = checkTokenForAssertionsForRreguriPost(pat);
+        ResponseEntity<PostRegisteredPeis201Response> asssertedResponse = checkTokenForAssertionsForRreguriPost(pat);
         if (asssertedResponse != null) {
             return asssertedResponse;
         }

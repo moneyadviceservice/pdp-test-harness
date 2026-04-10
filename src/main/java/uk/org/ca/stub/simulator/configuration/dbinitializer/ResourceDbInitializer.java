@@ -1,9 +1,14 @@
 package uk.org.ca.stub.simulator.configuration.dbinitializer;
 
-import jakarta.annotation.PostConstruct;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import uk.org.ca.stub.simulator.entity.RegisteredResource;
 import uk.org.ca.stub.simulator.entity.Scope;
 import uk.org.ca.stub.simulator.repository.ResourceRepository;
@@ -18,12 +23,16 @@ public class ResourceDbInitializer {
     private static final Logger logger = LoggerFactory.getLogger(ResourceDbInitializer.class);
 
     private final ResourceRepository resourceRepository;
+    
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public ResourceDbInitializer(ResourceRepository resourceRepository) {
         this.resourceRepository = resourceRepository;
     }
 
-    public static final List<RegisteredResource> DEFAULT_RESOURCES = List.of(
+    private static List<RegisteredResource> createDefaultResources() {
+        return List.of(
             RegisteredResource.builder()
                     .resourceId("92476c2f-25b8-4d87-afde-18a9ee2631dc")
                     .name("urn:pei:0e55140a-87d3-41cf-b6f7-bc822a4c3c3b:6e29eeb8-814c-44a6-a43f-b4830f3f4590")
@@ -143,13 +152,23 @@ public class ResourceDbInitializer {
                     .resourceScopes(List.of(Scope.OWNER, Scope.VALUE))
                     .pat(HAPPY_PATH_PAT_02)
                     .build()
-    );
+        );
+    }
 
-    @PostConstruct
+    public static List<RegisteredResource> getDefaultResources() {
+        return createDefaultResources();
+    }
+
+    @EventListener(ApplicationReadyEvent.class)
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public void init() {
-        logger.debug("Adding {} finds to the database", DEFAULT_RESOURCES.size());
-        resourceRepository.deleteAll();
-        resourceRepository.saveAll(DEFAULT_RESOURCES);
+        if (resourceRepository.count() > 0) {
+            logger.debug("Database already initialized, skipping");
+            return;
+        }
+        List<RegisteredResource> resources = createDefaultResources();
+        logger.debug("Adding {} finds to the database", resources.size());
+        resources.forEach(entityManager::persist);
     }
 
 }

@@ -1,0 +1,83 @@
+openapi: 3.0.0
+info:
+  title: Stub Configuration API
+  version: 1.0.0
+
+paths:
+  /configuration:
+    post:
+      summary: Configure stubbed responses for selected endpoints
+      description: |
+        Configure error stubs for endpoints. Send an empty array to clear all configurations.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              minItems: 0
+              maxItems: 6
+              items:
+                $ref: '#/components/schemas/StubConfiguration'
+            example:
+              - endpoint: /service-availability/find
+                status: 429
+                code: TOO_MANY_REQUESTS
+                count: 3
+                errors:
+                  - code: TOO_MANY_REQUESTS
+      responses:
+        '204':
+          description: Configuration accepted
+
+components:
+  schemas:
+    StubConfiguration:
+      type: object
+      required:
+        - endpoint
+        - status
+        - code
+        - errors
+        - count
+      properties:
+        endpoint:
+          type: string
+          description: One of the supported stub endpoints to override.
+          enum:
+            - /service-availability/find
+            - /service-availability/view
+            - /view-response/request-number
+            - /view-response/response-time
+            - /view-response/calculations
+            - /view-response/unavailable
+        status:
+          type: integer
+          format: int32
+          description: HTTP status code to return for this endpoint.
+          minimum: 100
+          maximum: 599
+          example: 429
+        code:
+          type: string
+          description: Top-level machine-readable error code for this configuration.
+          example: TOO_MANY_REQUESTS
+        count:
+          type: integer
+          format: int32
+          description: Number of times to return the configured error before reverting to normal behaviour.
+          minimum: 0
+          example: 3
+        errors:
+          type: array
+          description: Array of error entries that will appear in the stubbed response.
+          minItems: 1
+          items:
+            type: object
+            required:
+              - code
+            properties:
+              code:
+                type: string
+                description: Machine-readable error code.
+                example: TOO_MANY_REQUESTS

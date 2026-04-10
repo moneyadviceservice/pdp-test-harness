@@ -1,18 +1,26 @@
 package uk.org.ca.stub.simulator.rest.model;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
+import java.net.URI;
+import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
+import java.time.OffsetDateTime;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import java.util.Objects;
+
+import java.util.*;
+import jakarta.annotation.Generated;
 
 /**
  * RetrieveUmaToken400Response
  */
 
 @JsonTypeName("retrieve_uma_token_400_response")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-02-13T15:34:29.284844400Z[Europe/London]", comments = "Generator version: 7.5.0")
 public class RetrieveUmaToken400Response {
 
   /**
@@ -86,7 +94,7 @@ public class RetrieveUmaToken400Response {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    var retrieveUmaToken400Response = (RetrieveUmaToken400Response) o;
+    RetrieveUmaToken400Response retrieveUmaToken400Response = (RetrieveUmaToken400Response) o;
     return Objects.equals(this.error, retrieveUmaToken400Response.error);
   }
 
@@ -97,7 +105,7 @@ public class RetrieveUmaToken400Response {
 
   @Override
   public String toString() {
-    var sb = new StringBuilder();
+    StringBuilder sb = new StringBuilder();
     sb.append("class RetrieveUmaToken400Response {\n");
     sb.append("    error: ").append(toIndentedString(error)).append("\n");
     sb.append("}");

@@ -33,7 +33,7 @@ public class IntrospectApiController extends AbstractApiController implements In
         String pat = getTokenFromHeader(request.getHeader(HttpHeaders.AUTHORIZATION));
         String rpt = introspectBody.getToken();
 
-        ResponseEntity asssertedResponse = checkTokenForAssertionsForIntrospect(rpt);
+        ResponseEntity<IntrospectionResult> asssertedResponse = checkTokenForAssertionsForIntrospect(rpt);
         if (asssertedResponse != null) {
             return asssertedResponse;
         }

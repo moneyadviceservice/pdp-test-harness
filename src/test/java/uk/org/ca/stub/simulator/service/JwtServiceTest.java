@@ -77,7 +77,7 @@ class JwtServiceTest {
 
     @Test
     void getPermissions() {
-        var resId = UUID.randomUUID();
+        var resId = UUID.randomUUID().toString();
 
         List<IntrospectionResultPermissions> permissionsList = new ArrayList<>();
 
@@ -88,11 +88,11 @@ class JwtServiceTest {
         permissionsList.add(res);
 
         assertAll(
-                () -> assertThrows(IllegalArgumentException.class, () -> cut.getPermissions(null,resId.toString())),
-                () -> assertThrows(IllegalArgumentException.class, () -> cut.getPermissions("",resId.toString())),
-                () -> assertThrows(IllegalArgumentException.class, () -> cut.getPermissions("not-token",resId.toString())),
-                () -> assertEquals(1,cut.getPermissions(VALID_RPT_ACCESS_TOKEN,resId.toString()).size()),
-                () -> assertEquals(permissionsList,cut.getPermissions(VALID_RPT_ACCESS_TOKEN,resId.toString()))
+                () -> assertThrows(IllegalArgumentException.class, () -> cut.getPermissions(null,resId)),
+                () -> assertThrows(IllegalArgumentException.class, () -> cut.getPermissions("",resId)),
+                () -> assertThrows(IllegalArgumentException.class, () -> cut.getPermissions("not-token",resId)),
+                () -> assertEquals(1,cut.getPermissions(VALID_RPT_ACCESS_TOKEN,resId).size()),
+                () -> assertEquals(permissionsList,cut.getPermissions(VALID_RPT_ACCESS_TOKEN,resId))
         );
     }
 }

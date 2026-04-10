@@ -24,7 +24,7 @@ public class PermService extends AbstractAuthenticatedService {
 
     public String generatePMT(PermBody pb, UUID xRequestID, String pat) {
         this.validatePatStored(pat, userRepository);
-        var resource = resourceRepository.findByResourceId(pb.getResourceId().toString())
+        var resource = resourceRepository.findByResourceId(pb.getResourceId())
                 .orElseThrow(() -> new NotFoundException("Resource not found"));
 
         this.validatePatAuthentication(pat, resource);

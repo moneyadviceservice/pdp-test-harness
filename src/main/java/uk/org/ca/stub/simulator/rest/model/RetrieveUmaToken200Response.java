@@ -1,26 +1,32 @@
 package uk.org.ca.stub.simulator.rest.model;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
+import java.net.URI;
+import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
+import java.time.OffsetDateTime;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 
-import java.util.Objects;
+
+import java.util.*;
+import jakarta.annotation.Generated;
 
 /**
  * RetrieveUmaToken200Response
  */
 
 @JsonTypeName("retrieve_uma_token_200_response")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-02-13T15:34:29.284844400Z[Europe/London]", comments = "Generator version: 7.5.0")
 public class RetrieveUmaToken200Response {
 
   private String accessToken;
 
   /**
-   * The type of the generated access token
+   * The type of the generated acccess token
    */
   public enum TokenTypeEnum {
     RPT("pension_dashboard_rpt"),

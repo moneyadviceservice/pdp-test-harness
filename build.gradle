@@ -1,34 +1,43 @@
+buildscript {
+	configurations.classpath {
+		resolutionStrategy {
+			force 'io.swagger.parser.v3:swagger-parser-v3:2.1.36'
+		}
+	}
+}
+
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '3.3.2'
+	id 'org.springframework.boot' version '3.5.10'
 	id 'io.spring.dependency-management' version '1.1.6'
-	id "org.openapi.generator" version "7.5.0"
+	id "org.openapi.generator" version "7.17.0"
 	id 'jacoco'
 }
 
 group = 'uk.org.ca.stub'
-version = '1.1.4'
+version = '2.0.0-SNAPSHOT'
 
 java {
 	sourceCompatibility = JavaVersion.VERSION_21
 	targetCompatibility = JavaVersion.VERSION_21
 }
 
-dependencies {
-	implementation( 'org.springframework.boot:spring-boot-starter-web') {
-		exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
-	}
-	implementation 'org.apache.httpcomponents.client5:httpclient5:5.2.1'
-	implementation ('org.springframework.boot:spring-boot-starter-tomcat') {
-		exclude group: 'org.apache.tomcat.embed', module:'tomcat-embed-el'
-		exclude group: 'org.apache.tomcat.embed', module:'tomcat-embed-websocket'
-	}
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation ('org.springframework.boot:spring-boot-starter-validation') {
-		exclude group: 'org.apache.tomcat.embed', module:'tomcat-embed-el'
-	}
+ext {
+	set('commons-lang3.version', '3.18.0')
+	set('jackson-bom.version', '2.21.1')         // GHSA-72hv-8253-57qq (8.7 HIGH)
+	set('tomcat.version', '10.1.52')             // CVE-2026-24734 (7.5 HIGH)
+	set('spring-framework.version', '6.2.17')    // CVE-2026-22737, CVE-2026-22735
+}
 
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
+dependencies {
+	implementation 'org.apache.httpcomponents.core5:httpcore5:5.3.1'
+	implementation( 'org.springframework.boot:spring-boot-starter-web')
+	implementation 'org.apache.httpcomponents.client5:httpclient5:5.4.3'
+	implementation ('org.springframework.boot:spring-boot-starter-tomcat')
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation ('org.springframework.boot:spring-boot-starter-validation')
+
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.16'
 
 	implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
@@ -52,9 +61,16 @@ configurations {
 	}
 }
 
+processResources {
+	filesMatching('banner.txt') {
+		expand(projectVersion: project.version)
+	}
+}
+
 tasks.withType(JavaCompile).configureEach {
 	inputs.files(tasks.named('processResources'))
 	options.encoding = "UTF-8"
+	options.compilerArgs += ["-Xlint:deprecation", "-Xlint:unchecked"]
 }
 
 test {

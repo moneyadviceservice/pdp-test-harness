@@ -1,10 +1,17 @@
 package uk.org.ca.stub.simulator.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.concurrent.ThreadLocalRandom;
+import java.text.MessageFormat;
+import java.util.List;
+import java.util.UUID;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import uk.org.ca.stub.simulator.entity.RegisteredResource;
 import uk.org.ca.stub.simulator.entity.Scope;
 import uk.org.ca.stub.simulator.pojo.entity.UpsertFind;
@@ -14,12 +21,13 @@ import uk.org.ca.stub.simulator.rest.exception.ConflictException;
 import uk.org.ca.stub.simulator.rest.exception.InvalidRequestException;
 import uk.org.ca.stub.simulator.rest.exception.NotFoundException;
 import uk.org.ca.stub.simulator.rest.model.RreguriBody;
-
-import java.text.MessageFormat;
-import java.util.List;
-import java.util.UUID;
 import uk.org.ca.stub.simulator.utils.MatchStatusEnum;
-import static uk.org.ca.stub.simulator.utils.MatchStatusEnum.*;
+import static uk.org.ca.stub.simulator.utils.MatchStatusEnum.NO;
+import static uk.org.ca.stub.simulator.utils.MatchStatusEnum.POSSIBLE;
+import static uk.org.ca.stub.simulator.utils.MatchStatusEnum.REMOVED;
+import static uk.org.ca.stub.simulator.utils.MatchStatusEnum.TIMEOUT;
+import static uk.org.ca.stub.simulator.utils.MatchStatusEnum.WITHDRAWN;
+import static uk.org.ca.stub.simulator.utils.MatchStatusEnum.YES;
 
 @Service
 public class RegisterService extends AbstractAuthenticatedService {
@@ -62,10 +70,12 @@ public class RegisterService extends AbstractAuthenticatedService {
 
         var foundByName = resourceRepository.findByName(rreguriBody.getName());
         // existing entry
-        if (foundByName.isPresent())
-            return new UpsertFind(UUID.fromString(foundByName.get().getResourceId()), true);
+        if (foundByName.isPresent()) {
+            return new UpsertFind(foundByName.get().getResourceId(), true);
+        }
 
-        String resourceId = UUID.randomUUID().toString();
+        // Append a random digit to match real C&A behaviour
+        String resourceId = UUID.randomUUID().toString() + ThreadLocalRandom.current().nextInt(10);
 
         List<Scope> resourceScopes = getScopes(rreguriBody);
 
@@ -81,7 +91,7 @@ public class RegisterService extends AbstractAuthenticatedService {
                 .resourceId(resourceId)
                 .build();
         var save = resourceRepository.save(newFind);
-        return new UpsertFind(UUID.fromString(save.getResourceId()), false);
+        return new UpsertFind(save.getResourceId(), false);
     }
 
     private static List<Scope> getScopes(RreguriBody rreguriBody) {
@@ -106,7 +116,7 @@ public class RegisterService extends AbstractAuthenticatedService {
 
         this.validatePatAuthentication(pat, find);
         find.setMatchStatus(matchStatus.toString());
-        return new UpsertFind(UUID.fromString(resourceRepository.save(find).getResourceId()), true);
+        return new UpsertFind(resourceRepository.save(find).getResourceId(), true);
 
     }
 
@@ -131,20 +141,24 @@ public class RegisterService extends AbstractAuthenticatedService {
     }
 
     protected void verifyValidDeleteState(RegisteredResource resource, String deletionReason) {
-        final String INVALID_STATE_FOR_DELETION_REASON_MSG = "The find match status must be %s for allow to be deleted using  %s or %s";
         //  the only allowed values for deletion_reason are ‘match-no’, ‘match-timeout’, ‘match-withdrawn’ and ‘asset-removed’. If the request does not conform, the C&A Stub must return http status 400
         if (supportedStatusForDeletion.stream().noneMatch(s -> s.toString().equals(deletionReason))) {
             throw new InvalidRequestException(String.format("The delete reason is not one of the allowed %s vs %s", resource.getMatchStatus(), supportedStatusForDeletion));
         }
 
-        // If the deletion_reason is ‘match-no’ or ‘match-timeout’ and the stored resource match_status is not ‘match-possible’ the stub C&A must return http status 400 (bad request).
-        if ((deletionReason.equals(NO.toString()) || deletionReason.equals(TIMEOUT.toString())) && !resource.getMatchStatus().equals(POSSIBLE.toString())) {
-            throw new InvalidRequestException(String.format(INVALID_STATE_FOR_DELETION_REASON_MSG, POSSIBLE, NO, TIMEOUT));
+        // For match-yes: only match-withdrawn and asset-removed are valid deletion reasons
+        if (resource.getMatchStatus().equals(YES.toString()) &&
+                (deletionReason.equals(NO.toString()) || deletionReason.equals(TIMEOUT.toString()))
+        ) {
+            throw new InvalidRequestException(String.format("Delete reason '%s' not valid for the resource match status: '%s'", deletionReason, resource.getMatchStatus()));
         }
 
-        // If the deletion_reason is ‘match-withdrawn’ or ‘asset-removed’ and the stored resource match_status is not ‘match-yes’ the stub C&A must return http status 400 (bad request).
-        if ((deletionReason.equals(WITHDRAWN.toString()) || deletionReason.equals(REMOVED.toString())) && !resource.getMatchStatus().equals(YES.toString())) {
-            throw new InvalidRequestException(String.format(INVALID_STATE_FOR_DELETION_REASON_MSG, YES, WITHDRAWN, REMOVED));
+        // For match-possible: only match-no, match-timeout and asset-removed are valid deletion reasons (not match-withdrawn)
+        if (resource.getMatchStatus().equals(POSSIBLE.toString()) &&
+                !(deletionReason.equals(NO.toString()) || deletionReason.equals(TIMEOUT.toString())
+                        || deletionReason.equals(REMOVED.toString()))
+        ) {
+            throw new InvalidRequestException(String.format("Delete reason '%s' not valid for the resource match status: '%s'", deletionReason, resource.getMatchStatus()));
         }
     }
 }

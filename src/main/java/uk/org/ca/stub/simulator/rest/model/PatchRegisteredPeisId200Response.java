@@ -1,18 +1,25 @@
 package uk.org.ca.stub.simulator.rest.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-
+import java.net.URI;
 import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.time.OffsetDateTime;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
+import io.swagger.v3.oas.annotations.media.Schema;
+
+
+import java.util.*;
+import jakarta.annotation.Generated;
 
 /**
  * PatchRegisteredPeisId200Response
  */
 
 @JsonTypeName("patch_registered_peis_id_200_response")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-02-13T15:34:29.284844400Z[Europe/London]", comments = "Generator version: 7.5.0")
 public class PatchRegisteredPeisId200Response {
 
   private String resourceId;
@@ -56,7 +63,7 @@ public class PatchRegisteredPeisId200Response {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    var patchRegisteredPeisId200Response = (PatchRegisteredPeisId200Response) o;
+    PatchRegisteredPeisId200Response patchRegisteredPeisId200Response = (PatchRegisteredPeisId200Response) o;
     return Objects.equals(this.resourceId, patchRegisteredPeisId200Response.resourceId);
   }
 
@@ -67,7 +74,7 @@ public class PatchRegisteredPeisId200Response {
 
   @Override
   public String toString() {
-    var sb = new StringBuilder();
+    StringBuilder sb = new StringBuilder();
     sb.append("class PatchRegisteredPeisId200Response {\n");
     sb.append("    resourceId: ").append(toIndentedString(resourceId)).append("\n");
     sb.append("}");

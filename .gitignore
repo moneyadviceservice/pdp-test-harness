@@ -68,3 +68,9 @@ crash.*.log
 # to change depending on the environment.
 *.tfvars
 *.tfvars.json
+
+# Selfsigned certificate files
+/certificate-mgmt/*/
+/mTLS/*.bak
+/server-certificate.pem
+/server-certificate.key

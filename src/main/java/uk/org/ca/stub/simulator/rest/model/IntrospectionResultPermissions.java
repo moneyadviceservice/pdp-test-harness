@@ -12,7 +12,6 @@ import jakarta.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
 /**
  * IntrospectionResultPermissions
@@ -21,7 +20,7 @@ import java.util.UUID;
 @JsonTypeName("introspection_result_permissions")
 public class IntrospectionResultPermissions {
 
-  private UUID resourceId;
+  private String resourceId;
 
   /**
    * Gets or Sets resourceScopes
@@ -70,12 +69,12 @@ public class IntrospectionResultPermissions {
   /**
    * Constructor with only required parameters
    */
-  public IntrospectionResultPermissions(UUID resourceId, List<ResourceScopesEnum> resourceScopes) {
+  public IntrospectionResultPermissions(String resourceId, List<ResourceScopesEnum> resourceScopes) {
     this.resourceId = resourceId;
     this.resourceScopes = resourceScopes;
   }
 
-  public IntrospectionResultPermissions resourceId(UUID resourceId) {
+  public IntrospectionResultPermissions resourceId(String resourceId) {
     this.resourceId = resourceId;
     return this;
   }
@@ -84,14 +83,14 @@ public class IntrospectionResultPermissions {
    * The resource_id of a registered PeI
    * @return resourceId
   */
-  @NotNull @Valid
+  @NotNull
   @Schema(name = "resource_id", description = "The resource_id of a registered PeI", requiredMode = Schema.RequiredMode.REQUIRED)
   @JsonProperty("resource_id")
-  public UUID getResourceId() {
+  public String getResourceId() {
     return resourceId;
   }
 
-  public void setResourceId(UUID resourceId) {
+  public void setResourceId(String resourceId) {
     this.resourceId = resourceId;
   }
 
