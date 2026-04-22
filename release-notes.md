@@ -2,6 +2,9 @@
 
 The following document shows the changes introduced in each version of the C&A Stub.
 
+## v2.0.1 - 22 Apr 2026
+* Fixed bug that caused reporting endpoints to incorrectly reject requests where `submission_id` was present with an explicit `null` value.
+
 ## v2.0.0 - 24 Mar 2026
 * Added 6 reporting endpoints: `POST /view-response/request-number`, `POST /view-response/response-time`, `POST /view-response/calculations`, `POST /view-response/unavailable`, `POST /service-availability/find`, `POST /service-availability/view`
 * Added stub configuration endpoint: `POST /configuration`

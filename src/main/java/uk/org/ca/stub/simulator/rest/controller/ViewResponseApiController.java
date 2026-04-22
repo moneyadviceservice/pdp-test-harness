@@ -288,14 +288,15 @@ public class ViewResponseApiController implements ViewResponseApi {
         if (!m.containsKey(FIELD_SUBMISSION_REASON) || m.get(FIELD_SUBMISSION_REASON) == null) {
             return createManualValidationError(FIELD_SUBMISSION_REASON_CAMEL, MSG_MUST_NOT_BE_NULL);
         }
-        if (!isNullSubmission && (!m.containsKey(FIELD_SUBMISSION_ID) || m.get(FIELD_SUBMISSION_ID) == null)) {
-            return createManualValidationError(FIELD_SUBMISSION_ID_CAMEL, MSG_MUST_NOT_BE_NULL);
-        }
+
         if (!m.containsKey(FIELD_SUBMISSION_STATUS) || m.get(FIELD_SUBMISSION_STATUS) == null) {
             return createManualValidationError(FIELD_SUBMISSION_STATUS_CAMEL, MSG_MUST_NOT_BE_NULL);
         }
         if (!m.containsKey(FIELD_REPORTING_PERIOD_START) || m.get(FIELD_REPORTING_PERIOD_START) == null) {
             return createManualValidationError(FIELD_REPORTING_PERIOD_START_CAMEL, MSG_MUST_NOT_BE_NULL);
+        }
+        if (!isNullSubmission && !m.containsKey(FIELD_SUBMISSION_ID)) {
+            return createManualValidationError(FIELD_SUBMISSION_ID_CAMEL, MSG_MUST_NOT_BE_NULL);
         }
         return null;
     }
@@ -470,6 +471,12 @@ public class ViewResponseApiController implements ViewResponseApi {
             return createManualValidationError(FIELD_REQUEST_BODY, MSG_MUST_NOT_BE_EMPTY);
         }
 
+        // submission_id key must be present (value may be null per spec nullable:true)
+        if (viewResponseRequestNumberData instanceof Map<?, ?> rawMap
+                && !rawMap.containsKey(FIELD_SUBMISSION_ID)) {
+            return createManualValidationError(FIELD_SUBMISSION_ID_CAMEL, MSG_MUST_NOT_BE_NULL);
+        }
+
         ResponseEntity<DefaultResponse> err = validateNumberRequiredFields(request);
         if (err != null) return err;
 
@@ -485,9 +492,7 @@ public class ViewResponseApiController implements ViewResponseApi {
         if (request.getRecordId() == null) {
             return createManualValidationError(FIELD_RECORD_ID_CAMEL, MSG_MUST_NOT_BE_NULL);
         }
-        if (request.getSubmissionId() == null) {
-            return createManualValidationError(FIELD_SUBMISSION_ID_CAMEL, MSG_MUST_NOT_BE_NULL);
-        }
+
         if (request.getSubmissionStatus() == null) {
             return createManualValidationError(FIELD_SUBMISSION_STATUS_CAMEL, MSG_MUST_NOT_BE_NULL);
         }
@@ -658,9 +663,6 @@ private ResponseEntity<DefaultResponse> createPayloadTooLargeResponse() {
         ResponseEntity<DefaultResponse> err;
         // unavailable always requires submission_id (no null-submission variant)
         if ((err = validateCommonRequiredFields(m, false)) != null) return err;
-        if (!m.containsKey(FIELD_SUBMISSION_ID) || m.get(FIELD_SUBMISSION_ID) == null) {
-            return createManualValidationError(FIELD_SUBMISSION_ID_CAMEL, MSG_MUST_NOT_BE_NULL);
-        }
         if ((err = validateCommonFormats(m, submissionReasonRaw)) != null) return err;
         if ((err = validateUnavailCounts(m)) != null) return err;
 

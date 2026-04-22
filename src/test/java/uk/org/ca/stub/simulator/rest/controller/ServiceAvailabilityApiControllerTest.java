@@ -439,6 +439,52 @@ class ServiceAvailabilityApiControllerTest extends AbstractControllerTest {
         }
     }
 
+    @Test
+    void findServiceUnavailabilityData_shouldReturn400_whenMissingSubmissionId() throws Exception {
+        String requestBody = """
+                {
+                  "record_id": "6ac7f2a5-d518-44bf-9dff-ec5bf7e46e06",
+                  "submission_reason": "initial submission",
+                  "submission_status": "on time",
+                  "reporting_period_start": "2025-11-01T00:00:00.000Z",
+                  "items": [{"816f82b5-8e4f-407b-8c54-afb179c4af5a": [{"unavail_scheduled": true, "unavail_reason": "maintenance", "start_date_ts": "2025-11-01T00:00:00.000Z", "end_date_ts": "2025-11-01T04:00:00.000Z"}]}]
+                }
+                """;
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("X-Request-ID", UUID.randomUUID().toString());
+        HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
+
+        try {
+            restTemplate.postForEntity(findEndpoint, request, String.class);
+        } catch (HttpClientErrorException e) {
+            assertEquals(HttpStatus.BAD_REQUEST, e.getStatusCode());
+            JsonNode errorBody = objectMapper.readTree(e.getResponseBodyAsString());
+            assertEquals("INVALID_SUBMISSION_ID", errorBody.get("errors").get(0).get("code").asText());
+        }
+    }
+
+    @Test
+    void findServiceUnavailabilityData_shouldReturn202_whenSubmissionIdIsExplicitNull() throws Exception {
+        String requestBody = """
+                {
+                  "record_id": "6ac7f2a5-d518-44bf-9dff-ec5bf7e46e06",
+                  "submission_id": null,
+                  "submission_reason": "initial submission",
+                  "submission_status": "on time",
+                  "reporting_period_start": "2025-11-01T00:00:00.000Z",
+                  "items": [{"816f82b5-8e4f-407b-8c54-afb179c4af5a": [{"unavail_scheduled": true, "unavail_reason": "maintenance", "start_date_ts": "2025-11-01T00:00:00.000Z", "end_date_ts": "2025-11-01T04:00:00.000Z"}]}]
+                }
+                """;
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("X-Request-ID", UUID.randomUUID().toString());
+        HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
+
+        ResponseEntity<String> response = restTemplate.postForEntity(findEndpoint, request, String.class);
+        assertEquals(HttpStatus.ACCEPTED, response.getStatusCode());
+    }
+
     // ========== Validation Tests - Invalid field formats ==========
 
     @Test
@@ -784,6 +830,52 @@ class ServiceAvailabilityApiControllerTest extends AbstractControllerTest {
             JsonNode errorBody = objectMapper.readTree(e.getResponseBodyAsString());
             assertEquals("INVALID_SUBMISSION_ID", errorBody.get("errors").get(0).get("code").asText());
         }
+    }
+
+    @Test
+    void viewServiceUnavailabilityData_shouldReturn400_whenMissingSubmissionId() throws Exception {
+        String requestBody = """
+                {
+                  "record_id": "6ac7f2a5-d518-44bf-9dff-ec5bf7e46e06",
+                  "submission_reason": "initial submission",
+                  "submission_status": "on time",
+                  "reporting_period_start": "2025-11-01T00:00:00.000Z",
+                  "items": [{"816f82b5-8e4f-407b-8c54-afb179c4af5a": [{"unavail_scheduled": true, "unavail_reason": "maintenance", "start_date_ts": "2025-11-01T00:00:00.000Z", "end_date_ts": "2025-11-01T04:00:00.000Z"}]}]
+                }
+                """;
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("X-Request-ID", UUID.randomUUID().toString());
+        HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
+
+        try {
+            restTemplate.postForEntity(viewEndpoint, request, String.class);
+        } catch (HttpClientErrorException e) {
+            assertEquals(HttpStatus.BAD_REQUEST, e.getStatusCode());
+            JsonNode errorBody = objectMapper.readTree(e.getResponseBodyAsString());
+            assertEquals("INVALID_SUBMISSION_ID", errorBody.get("errors").get(0).get("code").asText());
+        }
+    }
+
+    @Test
+    void viewServiceUnavailabilityData_shouldReturn202_whenSubmissionIdIsExplicitNull() throws Exception {
+        String requestBody = """
+                {
+                  "record_id": "6ac7f2a5-d518-44bf-9dff-ec5bf7e46e06",
+                  "submission_id": null,
+                  "submission_reason": "initial submission",
+                  "submission_status": "on time",
+                  "reporting_period_start": "2025-11-01T00:00:00.000Z",
+                  "items": [{"816f82b5-8e4f-407b-8c54-afb179c4af5a": [{"unavail_scheduled": true, "unavail_reason": "maintenance", "start_date_ts": "2025-11-01T00:00:00.000Z", "end_date_ts": "2025-11-01T04:00:00.000Z"}]}]
+                }
+                """;
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("X-Request-ID", UUID.randomUUID().toString());
+        HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
+
+        ResponseEntity<String> response = restTemplate.postForEntity(viewEndpoint, request, String.class);
+        assertEquals(HttpStatus.ACCEPTED, response.getStatusCode());
     }
 
     @Test

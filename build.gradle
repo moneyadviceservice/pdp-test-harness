@@ -15,7 +15,7 @@ plugins {
 }
 
 group = 'uk.org.ca.stub'
-version = '2.0.0-SNAPSHOT'
+version = '2.0.1-SNAPSHOT'
 
 java {
 	sourceCompatibility = JavaVersion.VERSION_21

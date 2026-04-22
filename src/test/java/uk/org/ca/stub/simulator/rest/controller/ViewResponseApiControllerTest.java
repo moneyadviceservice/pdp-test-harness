@@ -602,6 +602,28 @@ class ViewResponseApiControllerTest extends AbstractControllerTest {
         }
     }
 
+    @Test
+    void viewResponseRequestNumber_shouldReturn202_whenSubmissionIdIsExplicitNull() throws Exception {
+        String requestBody = """
+                {
+                  "holdernameGuid": "816f82b5-8e4f-407b-8c54-afb179c4af5a",
+                  "record_id": "6ac7f2a5-d518-44bf-9dff-ec5bf7e46e06",
+                  "submission_id": null,
+                  "submission_reason": "initial submission",
+                  "submission_status": "on time",
+                  "reporting_period_start": "2026-03-19T00:00:00.000Z",
+                  "req_count": 100
+                }
+                """;
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("X-Request-ID", UUID.randomUUID().toString());
+        HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
+
+        ResponseEntity<String> response = restTemplate.postForEntity(requestNumberEndpoint, request, String.class);
+        assertEquals(HttpStatus.ACCEPTED, response.getStatusCode());
+    }
+
     // ========== Validation Tests - response-time ==========
 
     @Test
@@ -1060,6 +1082,29 @@ class ViewResponseApiControllerTest extends AbstractControllerTest {
     }
 
     @Test
+    void viewResponseCalculations_shouldReturn202_whenSubmissionIdIsExplicitNull() throws Exception {
+        String requestBody = """
+                {
+                  "holdernameGuid": "816f82b5-8e4f-407b-8c54-afb179c4af5a",
+                  "record_id": "6ac7f2a5-d518-44bf-9dff-ec5bf7e46e06",
+                  "submission_id": null,
+                  "submission_reason": "initial submission",
+                  "submission_status": "on time",
+                  "reporting_period_start": "2026-03-19T00:00:00.000Z",
+                  "calculation_type": "single",
+                  "single_calculation": {"items": [{"value_code": "DBC", "calculation_start_date": "2025-11-05T00:00:00.000Z", "calculation_end_date": "2025-11-15T00:00:00.000Z"}]}
+                }
+                """;
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("X-Request-ID", UUID.randomUUID().toString());
+        HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
+
+        ResponseEntity<String> response = restTemplate.postForEntity(calculationsEndpoint, request, String.class);
+        assertEquals(HttpStatus.ACCEPTED, response.getStatusCode());
+    }
+
+    @Test
     void viewResponseCalculations_shouldReturn400_whenInvalidSubmissionReason() throws Exception {
         String requestBody = """
                 {
@@ -1492,6 +1537,30 @@ class ViewResponseApiControllerTest extends AbstractControllerTest {
             JsonNode errorBody = objectMapper.readTree(e.getResponseBodyAsString());
             assertEquals("INVALID_SUBMISSION_ID", errorBody.get("errors").get(0).get("code").asText());
         }
+    }
+
+    @Test
+    void viewResponseUnavailable_shouldReturn202_whenSubmissionIdIsExplicitNull() throws Exception {
+        String requestBody = """
+                {
+                  "holdernameGuid": "816f82b5-8e4f-407b-8c54-afb179c4af5a",
+                  "record_id": "6ac7f2a5-d518-44bf-9dff-ec5bf7e46e06",
+                  "submission_id": null,
+                  "submission_reason": "initial submission",
+                  "submission_status": "on time",
+                  "reporting_period_start": "2026-03-19T00:00:00.000Z",
+                  "contact_count": 1, "missingadmin_count": 0, "temperror_count": 0,
+                  "eri_unavail_ano_count": 0, "eri_unavail_ppf_count": 0, "eri_unavail_trn_count": 0,
+                  "accrued_unavail_ano_count": 0, "accrued_unavail_ppf_count": 0, "accrued_unavail_trn_count": 0
+                }
+                """;
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("X-Request-ID", UUID.randomUUID().toString());
+        HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
+
+        ResponseEntity<String> response = restTemplate.postForEntity(unavailableEndpoint, request, String.class);
+        assertEquals(HttpStatus.ACCEPTED, response.getStatusCode());
     }
 
     @Test
@@ -2318,6 +2387,28 @@ class ViewResponseApiControllerTest extends AbstractControllerTest {
             JsonNode errorBody = objectMapper.readTree(e.getResponseBodyAsString());
             assertEquals("INVALID_SUBMISSION_ID", errorBody.get("errors").get(0).get("code").asText());
         }
+    }
+
+    @Test
+    void viewResponseTime_shouldReturn202_whenSubmissionIdIsExplicitNull() throws Exception {
+        String requestBody = """
+                {
+                  "holdernameGuid": "816f82b5-8e4f-407b-8c54-afb179c4af5a",
+                  "record_id": "6ac7f2a5-d518-44bf-9dff-ec5bf7e46e06",
+                  "submission_id": null,
+                  "submission_reason": "initial submission",
+                  "submission_status": "on time",
+                  "reporting_period_start": "2026-03-19T00:00:00.000Z",
+                  "items": [{"req_date_ts": "2026-01-01T10:00:00.000Z", "resp_date_ts": "2026-01-01T10:00:15.000Z"}]
+                }
+                """;
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("X-Request-ID", UUID.randomUUID().toString());
+        HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
+
+        ResponseEntity<String> response = restTemplate.postForEntity(responseTimeEndpoint, request, String.class);
+        assertEquals(HttpStatus.ACCEPTED, response.getStatusCode());
     }
 
     @Test
