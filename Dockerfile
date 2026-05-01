@@ -22,6 +22,8 @@ ARG UNSECURE_API_PORT
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 
+RUN apk upgrade --no-cache
+
 EXPOSE ${API_PORT} ${UNSECURE_API_PORT}
 
 COPY --chown=root:root --chmod=755 certificate-mgmt/cert-manager.sh /cas/
@@ -34,7 +36,6 @@ RUN echo " :::::::::::::::::::: Running on $BUILDPLATFORM, building for $TARGETP
  && mkdir -p /cas/logs \
  && chown 1000:1000 -R /cas \
  && chmod 755 /cas/mTLS \
- && apk upgrade --no-cache \
  && apk add --no-cache bash dos2unix openssl \
  && dos2unix /cas/start_stub_wrapper.sh /cas/cert-manager.sh
 

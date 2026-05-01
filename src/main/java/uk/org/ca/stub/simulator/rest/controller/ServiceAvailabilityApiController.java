@@ -233,11 +233,10 @@ public class ServiceAvailabilityApiController implements ServiceAvailabilityApi 
 
     private ResponseEntity<DefaultResponse> checkRequiredTopLevelFields(Object rawRequest) {
         if (!(rawRequest instanceof java.util.Map<?, ?> map)) return null;
-        boolean isNullSubmission = VALUE_NULL_SUBMISSION.equals(map.get(FIELD_SUBMISSION_REASON));
         for (String required : REQUIRED_SERVICE_AVAILABILITY_FIELDS) {
             boolean missing = !map.containsKey(required);
             boolean nullValue = !missing && map.get(required) == null;
-            if (nullValue && isNullSubmission && FIELD_SUBMISSION_ID.equals(required)) continue;
+            if (nullValue && FIELD_SUBMISSION_ID.equals(required)) continue;
             if (missing || nullValue) {
                 return missingTopLevelFieldError(required);
             }

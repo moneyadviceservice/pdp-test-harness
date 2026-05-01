@@ -15,7 +15,7 @@ plugins {
 }
 
 group = 'uk.org.ca.stub'
-version = '2.0.0-SNAPSHOT'
+version = '2.0.2-SNAPSHOT'
 
 java {
 	sourceCompatibility = JavaVersion.VERSION_21
@@ -25,7 +25,7 @@ java {
 ext {
 	set('commons-lang3.version', '3.18.0')
 	set('jackson-bom.version', '2.21.1')         // GHSA-72hv-8253-57qq (8.7 HIGH)
-	set('tomcat.version', '10.1.52')             // CVE-2026-24734 (7.5 HIGH)
+	set('tomcat.version', '10.1.54')             // CVE-2026-24734 (7.5 HIGH)
 	set('spring-framework.version', '6.2.17')    // CVE-2026-22737, CVE-2026-22735
 }
 
